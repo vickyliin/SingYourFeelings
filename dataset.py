@@ -17,3 +17,22 @@ def midi2vec(midi):
 def vec2midi(vec):
   midi = MIDIFile(config.music.Ci)
   return midi
+
+class Batch(tuple):
+  def __len__(self):
+    return self[0][0].size(0)
+
+class Dataset:
+  def __init__(self, filename):
+    self.data = pd.read_json(DATA, lines = 1)
+
+  def __getitem__(self, i):
+    # get batch
+    return Batch(inp, tar)
+
+  def shuffle(self):
+    pass
+
+  def size(self):
+    return len(self.data)
+

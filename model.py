@@ -43,19 +43,19 @@ class MusicEncoder(nn.Module):
   dp = music.dp
   assert L >= K, 'MusicEncoder: Seq length should >= kernel size'
   @param(
-    note = ['Tensor', (300, Ci, L, E)], 
+    note = ['Tensor', (300, Ci, E, L)], 
     tempo = ['Tensor', (300, Ci)],
   )
   def __init__(self):
     super().__init__()
-    self.conv = nn.Conv2d(self.Ci, self.Co, (self.K, self.E))
+    self.conv = nn.Conv2d(self.Ci, self.Co, (self.E, self.K))
     self.pool = nn.MaxPool1d(self.L, ceil_mode=True)
     self.linear = nn.Linear(self.Co, self.M-1)
     self.dropout = nn.Dropout(self.dp, inplace=True)
 
   def forward(self, inp):
     note, tempo = inp
-    # note: torch tensor, N x Ci x L x E
+    # note: torch tensor, N x Ci x E x L
     # tempo: torch tensor, N x Ci
     # out: torch tensor variable, N x M
     assert type(note).__name__.endswith('Tensor')
@@ -65,7 +65,7 @@ class MusicEncoder(nn.Module):
     tempo = self.tempo.resize_(tempo.size()).copy_(tempo)
     tempo = Variable(tempo)
 
-    hid = self.conv(note).squeeze(-1)             # N x Co x L-
+    hid = self.conv(note).squeeze(2)              # N x Co x L-
     hid = self.pool(hid).squeeze(-1)              # N x Co
     hid = self.linear(hid)                        # N x M-1
     self.dropout(hid)
@@ -81,27 +81,30 @@ class MusicDecoder(nn.Module):
   @param()
   def __init__(self):
     super().__init__()
-    self.linear = nn.Linear(self.M, self.Co)
+    self.linear = nn.Linear(self.M-1, self.Co)
     self.unpool = nn.Linear(1, self.L+self.K-1)
     self.unconv = nn.Conv1d(self.Co, self.Ci*self.E, self.K)
     self.dropout = nn.Dropout(self.dp, inplace=True)
+    self.tempo = nn.Linear(1, self.Ci)
 
   def forward(self, inp):
     # inp: torch tensor variable, N x M
-    # out: torch tensor variable, N x Ci x L x E
+    # note: torch tensor variable, N x Ci x E x L
+    # tempo: torch tensor variable, N x Ci
     assert type(inp).__name__ == 'Variable'
 
-    hid = self.linear(inp)                        # N x Co
+    hid = self.linear(inp[:,1:])                  # N x Co
     hid = self.unpool(hid.view(-1,1))             # N*Co x L+K-1
     hid = hid.view(-1, self.Co, self.L+self.K-1)  # N x Co x L+K-1
     self.dropout(hid)
 
-    out = self.unconv(hid)                        # N x Ci*E x L
-    out = out.view(-1, self.Ci, self.E, self.L)   # N x Ci x E x L
-    out = out.transpose(2, 3).contiguous()        # N x Ci x L x E
-    self.dropout(out)
+    note = self.unconv(hid)                         # N x Ci*E x L
+    note = note.view(-1, self.Ci, self.E, self.L)   # N x Ci x E x L
+    self.dropout(note)
 
-    return out
+    tempo = self.tempo(inp[:,:1])
+
+    return note, tempo
 
 
 class LyricsEncoder(nn.Module):
@@ -148,7 +151,11 @@ def translateWrap(translator):
   return translate
 
 class Translator(nn.Module):
-  @param()
+  L, Ci, E = music.L, music.Ci, music.E
+  @param(
+    note = ['Tensor', (300, Ci, E, L)], 
+    tempo = ['Tensor', (300, Ci)],
+  )
   def __init__(self, init = None):
     # encoder: lyrics encoder / music encoder
     # decoder: music decoder
@@ -169,6 +176,11 @@ class Translator(nn.Module):
     dec = self.decoder(enc)
     return dec
 
+  def wrapTar(self, tar):
+    note, tempo = tar
+    self.note.resize_(note.size()).copy_(note)
+    self.tempo.resize_(tempo.size()).copy_(tempo)
+    return Variable(self.note), Variable(self.tempo)
 
 if __name__ == '__main__':
   vsL, vsM = len(dataset.lex.vocab), 5
@@ -193,16 +205,19 @@ if __name__ == '__main__':
   md = MusicDecoder()
   print(md)
   outMd = md(outMe)
-  assert outMd.size() == note.size()
+  assert outMd[0].size() == note.size()
+  assert outMd[1].size() == tempo.size()
 
   ae = Translator([me, md])
   print('Autoencoder: ', ae)
   outAe = ae(mus)
-  assert outAe.size() == note.size()
+  assert outAe[0].size() == note.size()
+  assert outAe[1].size() == tempo.size()
 
   tr = Translator([le, md])
   print('Translator: ', tr)
   outTr = tr(lyr)
-  assert outTr.size() == note.size()
+  assert outTr[0].size() == note.size()
+  assert outTr[1].size() == tempo.size()
 
   torch.save(tr.state_dict(), 'model/test.para')
