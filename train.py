@@ -32,10 +32,9 @@ def batchLoss(model, dataset, train = True):
     epoch_loss[0] += loss[0].data[0]
     epoch_loss[1] += loss[1].data[0]
 
-  note, tempo = inp
-  print('- InpTempo\t-', tempo.squeeze().tolist())
-  note, tempo = out
-  print('- OutTempo\t-', tempo.data.squeeze().tolist())
+  print('  InpTempo:', inp[1].squeeze().tolist())
+  print('  TarTempo:', tar[1].data.squeeze().tolist())
+  print('  OutTempo:', out[1].data.squeeze().tolist())
 
   loss = [ loss/dataset.size() for loss in epoch_loss ]
   yield loss, True
@@ -46,7 +45,7 @@ def train(model, trainset, valset):
   optim = args.optim(model.parameters(), **args.optim_args)
   optim.zero_grad()
 
-  for epoch in range(1, args.max_epoch):
+  for epoch in range(1, args.max_epoch+1):
     print('\nEpoch', epoch)
     trainset.shuffle()
     model.train(True)
