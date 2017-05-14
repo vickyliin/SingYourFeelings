@@ -1,31 +1,59 @@
-class music:
+import yaml
+
+class Args(type):
+  def __str__(self):
+    args = { k: v for k, v in vars(self).items() if not k.startswith('_') }
+    if self.__doc__:
+      args = {'Description': yaml.load(self.__doc__), 'Data':args}
+    s = yaml.dump({self.__name__: args}, default_flow_style=False)
+    return s
+
+  def __repr__(self):
+    return str(self)
+
+class train_ae(metaclass=Args):
+  optim = 'Adam'#'RMSprop'
+  optim_args = dict(
+    lr = 3e-3
+  )
+  batch_size = 30
+  max_epoch = 10000
+  endure = 20
+  loss = 'MSELoss'
+
+class music(metaclass=Args):
+  '''
+    L: max music length 
+    Ci: music track number
+    E: note feature number
+    K: kernel size
+    Co: output channel
+    dp: dropout rate
+  '''
+ 
   feat2id = {'pitch':0, 'time':1, 'duration':2, 'volume':3}
   id2feat = { v: k for k, v in feat2id.items() }
-  # max music length
   L = 4 #300
-  # music track number
   Ci = 2 #5
-  # note feature number
   E = len(feat2id)
-  # kernel size
   K = 2 #10
-  # output channel
   Co = 200
-  # dropout rate
-  dp = .5
+  dp = 0.5
 
-class lyrics:
-  # max lyrics length
+class lyrics(metaclass=Args):
+  '''
+    L: max lyrics length
+    E: word embedding size
+    K: kernel size (n-gram)
+    Co: output channel (n-gram vector dim)
+    dp: dropout rate
+    lex: word2vec file
+  '''
   L = 5 #500
-  # word embedding size
   E = 200
-  # kernel size (n-gram)
   K = 1
-  # output channel (n-gram vector dim)
   Co = 250
-  # dropout rate
-  dp = .5
-  # word2vec file
+  dp = 0.8
   lex = 'data/word-vectors.txt'
 
 # encoded vector size

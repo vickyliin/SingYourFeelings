@@ -20,11 +20,9 @@ class param:
       if use_cuda:
         self.cuda()
         for k, (t, v) in params.items():
-          print(k, ':', t, v)
           setattr(self, k, getattr(torch,t)(*v).cuda())
       else:
         for k, v in params.items():
-          print(k, ':', t, v)
           setattr(self, k, getattr(torch,t)(*v))
 
     return __init__
@@ -50,8 +48,9 @@ class MusicEncoder(nn.Module):
     super().__init__()
     self.conv = nn.Conv2d(self.Ci, self.Co, (self.E, self.K))
     self.pool = nn.MaxPool1d(self.L, ceil_mode=True)
-    self.linear = nn.Linear(self.Co, self.M-1)
+    self.linear = nn.Linear(self.Ci+self.Co, self.M)
     self.dropout = nn.Dropout(self.dp, inplace=True)
+    self.activate = nn.Sigmoid()
 
   def forward(self, inp):
     note, tempo = inp
@@ -67,10 +66,12 @@ class MusicEncoder(nn.Module):
 
     hid = self.conv(note).squeeze(2)              # N x Co x L-
     hid = self.pool(hid).squeeze(-1)              # N x Co
-    hid = self.linear(hid)                        # N x M-1
+    hid = torch.cat([tempo, hid], 1)              # N x Ci+Co
     self.dropout(hid)
 
-    out = torch.cat([tempo.sum(1), hid], 1)       # N x M
+    out = self.linear(hid)                        # N x M
+    self.dropout(out)
+    self.activate(out)
 
     return out
 
@@ -81,11 +82,11 @@ class MusicDecoder(nn.Module):
   @param()
   def __init__(self):
     super().__init__()
-    self.linear = nn.Linear(self.M-1, self.Co)
+    self.linear = nn.Linear(self.M, self.Ci+self.Co)
     self.unpool = nn.Linear(1, self.L+self.K-1)
     self.unconv = nn.Conv1d(self.Co, self.Ci*self.E, self.K)
     self.dropout = nn.Dropout(self.dp, inplace=True)
-    self.tempo = nn.Linear(1, self.Ci)
+    self.activate = nn.ReLU()
 
   def forward(self, inp):
     # inp: torch tensor variable, N x M
@@ -93,16 +94,20 @@ class MusicDecoder(nn.Module):
     # tempo: torch tensor variable, N x Ci
     assert type(inp).__name__ == 'Variable'
 
-    hid = self.linear(inp[:,1:])                  # N x Co
+    hid = self.linear(inp)                        # N x Ci+Co
+    tempo, hid = hid[:,:self.Ci], hid[:,self.Ci:] # N x Co
+    hid = hid.contiguous()
     hid = self.unpool(hid.view(-1,1))             # N*Co x L+K-1
     hid = hid.view(-1, self.Co, self.L+self.K-1)  # N x Co x L+K-1
-    self.dropout(hid)
+    hid = self.activate(hid)
 
     note = self.unconv(hid)                         # N x Ci*E x L
     note = note.view(-1, self.Ci, self.E, self.L)   # N x Ci x E x L
     self.dropout(note)
 
-    tempo = self.tempo(inp[:,:1])
+    tempo = self.activate(tempo)
+    note = self.activate(note)
+
 
     return note, tempo
 
@@ -120,6 +125,7 @@ class LyricsEncoder(nn.Module):
     self.conv = nn.Conv2d(1, self.Co, (self.K, self.E))
     self.pool = nn.MaxPool1d(self.L, ceil_mode=True)
     self.linear = nn.Linear(self.Co, self.M)
+    self.activate = nn.Sigmoid()
 
 
   def forward(self, inp):
@@ -138,6 +144,7 @@ class LyricsEncoder(nn.Module):
 
     out = self.linear(hid)                        # N x M
     self.dropout(out)
+    out = self.activate(out)
 
     return out
 
