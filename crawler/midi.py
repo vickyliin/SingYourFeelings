@@ -1,6 +1,8 @@
 from bs4 import BeautifulSoup
 import requests
 import re
+import urllib
+import os
 def pagelink(url):
     result=requests.get(url)
     page=result.text
@@ -18,18 +20,19 @@ def songtext(url):
     doc=BeautifulSoup(page,"html.parser")
     test1=doc.find_all('td')
     titlyr=[t.text for t in test1]
-    title=titlyr.pop(0)
-    title=re.sub('\u3000','',title)
+    title=''
+    while title=='':
+        title=titlyr.pop(0)
+        title=re.sub('\u3000','',title)
     titletxt=title+'.txt'
     lyr='\n'.join(titlyr)
     lyr=lyr.strip('\n')
-    fout=open(titletxt,'wt')
+    lyr=re.sub('\xa0','',lyr)
+    fout=open(os.path.join('C:\\trytrysee',titletxt),'wt')
     fout.write(lyr)
     fout.close()
     song=doc.find('bgsound')
     songurl=song.get('src')
-    songurl='http://www.tacocity.com.tw/ala/ch'+songurl
+    songurl='http://sql.jaes.ntpc.edu.tw/javaroom/midi/alas/Ch/'+songurl
     titlemid=title+'.mid'
-    urllib.request.urlretrieve(songurl,titlemid)
-    
-    
+    urllib.request.urlretrieve(songurl,os.path.join('C:\\trytrysee',titlemid))
