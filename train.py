@@ -23,6 +23,7 @@ def batchLoss(model, dataset, train = True):
     inp, tar = batch
     tar = model.wrapTar(tar)
     out = model(inp)
+
     loss[0] = args.loss(out[0], tar[0])
     loss[1] = args.loss(out[1], tar[1])
     if train:
@@ -30,6 +31,11 @@ def batchLoss(model, dataset, train = True):
 
     epoch_loss[0] += loss[0].data[0]
     epoch_loss[1] += loss[1].data[0]
+
+  note, tempo = inp
+  print('- InpTempo\t-', tempo.squeeze().tolist())
+  note, tempo = out
+  print('- OutTempo\t-', tempo.data.squeeze().tolist())
 
   loss = [ loss/dataset.size() for loss in epoch_loss ]
   yield loss, True
@@ -41,10 +47,9 @@ def train(model, trainset, valset):
   optim.zero_grad()
 
   for epoch in range(1, args.max_epoch):
-    print('Epoch', epoch)
+    print('\nEpoch', epoch)
     trainset.shuffle()
     model.train(True)
-    epoch_loss = [0, 0]
     for loss, end in batchLoss(model, trainset):
       if end:
         break
@@ -52,12 +57,14 @@ def train(model, trainset, valset):
       loss[1].backward()
       optim.step()
       optim.zero_grad()
-    print('Train Loss: ', loss)
+    print('Train Loss\t-',
+        'note: {l[0]:8.2f}, tempo {l[1]:8.2f}'.format(l=loss))
 
     model.train(False)
     loss, _ = next(batchLoss(model, valset, train=False))
-    print('Val Loss:   ', loss)
-    print()
+    print('Validate Loss\t-',
+        'note: {l[0]:8.2f}, tempo {l[1]:8.2f}'.format(l=loss))
+
 
 if __name__ == '__main__':
   import random
@@ -76,18 +83,21 @@ if __name__ == '__main__':
   trainset = Dataset()
   valset = Dataset()
 
-  # number of epoch
-  n, max_val = 4, 100
+  # n: number of batch in an epoch
+  n, max_val = 2, 100
   for i in range(n):
     nsize = (args.batch_size, *ae.note.size()[1:])
     tsize = (args.batch_size, *ae.tempo.size()[1:])
+
     note = torch.floor( torch.rand(*nsize) * max_val )
     tempo = torch.floor( torch.rand(*tsize) * max_val )
     inp = (note, tempo)
+
     note = torch.floor( torch.rand(*nsize) * max_val )
     tempo = torch.floor( torch.rand(*tsize) * max_val )
     tar = (note, tempo)
-    if i < n//4:
+
+    if i < n//2:
       valset.append(dataset.Batch([inp, tar]))
     else:
       trainset.append(dataset.Batch([inp, tar]))
