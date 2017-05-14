@@ -15,7 +15,7 @@ makedirs(OUT_PATH, exist_ok=True)
   id: int,
   raw: [lyrics (str), music path (str)],
   lyrics: lyrics sequence vector (list float),
-  music: music sequence matrix (list list float)
+  music: music sequence matrix ( 3d list float)
 }
 '''
 translator = model.Translator()
