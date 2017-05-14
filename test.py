@@ -1,12 +1,15 @@
+#!/usr/bin/env python
 import model
 
 import json
 import pandas as pd
+from os import makedirs
 
 
 MODEL = 'test'
 DATA = 'data/test.jsonl'
 OUT_PATH = 'output/'
+makedirs(OUT_PATH, exist_ok=True)
 '''
 {
   id: int,
