@@ -2,23 +2,21 @@ from bs4 import BeautifulSoup
 import requests
 import re
 import urllib
-# import os
+import os
+import logging
+logger = logging.getLogger('MIDI')
 
-# OUT_PATH = os.path.join('C:\\trytrysee',titletxt)
-OUT_PATH = '../data/raw'
-
-def pagelink(url):
+def songlink(url):
     result=requests.get(url)
     page=result.text
     doc=BeautifulSoup(page,"html.parser")
     titlelist=doc.find_all('a')
-    titlelinks=[title.get('tppabs') for title in titlelist]
-    titlelinks=[title.replace('www.tacocity.com.tw/ala/lyrics/lych',\
-                              'sql.jaes.ntpc.edu.tw/javaroom/midi/alas')\
-                for title in titlelinks]
+    titlelinks=[title.get('href') for title in titlelist]
+    titlelinks=['http://sql.jaes.ntpc.edu.tw/javaroom/midi/alas/Ch/'+\
+                title for title in titlelinks]
     titlelinks=[re.sub('ch\d','Ch',title) for title in titlelinks]
     return titlelinks
-def songtext(url):
+def songtext(url,path):
     result=requests.get(url)
     page=result.text.encode('ISO-8859-1').decode('big5')
     doc=BeautifulSoup(page,"html.parser")
@@ -32,11 +30,18 @@ def songtext(url):
     lyr='\n'.join(titlyr)
     lyr=lyr.strip('\n')
     lyr=re.sub('\xa0','',lyr)
-    fout=open(OUT_PATH+titletxt,'wt')
+
+    fout=open(os.path.join(path,titletxt),'wt')
     fout.write(lyr)
     fout.close()
     song=doc.find('bgsound')
     songurl=song.get('src')
-    songurl='http://sql.jaes.ntpc.edu.tw/javaroom/midi/alas/Ch/'+songurl
-    titlemid=title+'.mid'
-    urllib.request.urlretrieve(songurl,OUT_PATH+titlemid)
+
+    try:
+        songurl='http://sql.jaes.ntpc.edu.tw/javaroom/midi/alas/Ch/'+songurl
+        titlemid=title+'.mid'
+        urllib.request.urlretrieve(songurl,os.path.join(path,titlemid))
+    except Exception as e:
+        logger.error(title)
+        logger.error(e)
+        
