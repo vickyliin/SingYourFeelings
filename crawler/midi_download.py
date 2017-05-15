@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from bs4 import BeautifulSoup
 import requests
 import midi
@@ -16,7 +17,7 @@ for pagelink in pagelinks:
     for songurl in titlelinks:
         try:
             midi.songtext(songurl)
-        except:
+        except Exception as e:
             print(songurl,'\n has some problems')
-            print(Exception)
+            print(e)
             

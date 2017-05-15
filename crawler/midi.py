@@ -2,7 +2,11 @@ from bs4 import BeautifulSoup
 import requests
 import re
 import urllib
-import os
+# import os
+
+# OUT_PATH = os.path.join('C:\\trytrysee',titletxt)
+OUT_PATH = '../data/raw'
+
 def pagelink(url):
     result=requests.get(url)
     page=result.text
@@ -28,11 +32,11 @@ def songtext(url):
     lyr='\n'.join(titlyr)
     lyr=lyr.strip('\n')
     lyr=re.sub('\xa0','',lyr)
-    fout=open(os.path.join('C:\\trytrysee',titletxt),'wt')
+    fout=open(OUT_PATH+titletxt,'wt')
     fout.write(lyr)
     fout.close()
     song=doc.find('bgsound')
     songurl=song.get('src')
     songurl='http://sql.jaes.ntpc.edu.tw/javaroom/midi/alas/Ch/'+songurl
     titlemid=title+'.mid'
-    urllib.request.urlretrieve(songurl,os.path.join('C:\\trytrysee',titlemid))
+    urllib.request.urlretrieve(songurl,OUT_PATH+titlemid)
