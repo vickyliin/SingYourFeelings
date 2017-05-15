@@ -9,7 +9,12 @@ logger = logging.getLogger('MIDIDownloader')
 sh = logging.StreamHandler()
 sh.setFormatter(logging.Formatter(fmt))
 logger.addHandler(sh)
-PATH = '../data/raw'
+
+import sys
+if len(sys.argv) > 1:
+    PATH = sys.argv[1]
+else:
+    PATH = '../data/raw'
 
 def mdownload(path):
     for pagelink in pagelinks:
