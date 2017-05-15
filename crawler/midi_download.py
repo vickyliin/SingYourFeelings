@@ -11,12 +11,11 @@ while None in pagelinks:
 pagelinks=[page.get('href') for page in pagelinks]
 pagelinks=['http://sql.jaes.ntpc.edu.tw/javaroom/midi/alas/Ch/'\
            +page for page in pagelinks]
-for pagelink in pagelinks:
-    titlelinks=midi.pagelink(pagelink)
-    for songurl in titlelinks:
-        try:
-            midi.songtext(songurl)
-        except:
-            print(songurl,'\n has some problems')
-            print(Exception)
-            
+def mdownload(path):
+    for pagelink in pagelinks:
+        titlelinks=midi.songlink(pagelink)
+        for songurl in titlelinks:
+            try:
+                midi.songtext(songurl,path)
+            except:
+                print(songurl,'\n has some problems')
