@@ -43,6 +43,9 @@ def batchLoss(model, dataset, criterion, train = True):
   '''
   yield loss, True
 
+def validate(model, valset, criterion):
+  return next(batchLoss(model, valset, criterion, train=False))[0]
+
 
 def earlyStop(fin):
   def train(model, trainset, valset, args):
@@ -91,8 +94,8 @@ def train(model, trainset, valset, args):
       optim.zero_grad()
 
     model.train(False)
-    loss, _ = next(batchLoss(model, valset, criterion, train=False))
-    yield loss
+    valloss = validate(model, valset, criterion)
+    yield valloss
 
 
 if __name__ == '__main__':
@@ -104,7 +107,6 @@ if __name__ == '__main__':
   
   ae = model.Translator([me, md])
   tr = model.Translator([le, md])
-  args = config.train_ae
   class Dataset(list):
     def shuffle(self):
       random.shuffle(self)
@@ -119,10 +121,11 @@ if __name__ == '__main__':
 
   # n: number of batch in an dataset
   n = 20
+  bs = config.autoencoder.batch_size
   for i in range(2*n):
-    nsize = (args.batch_size, *ae.note.size()[1:])
-    tsize = (args.batch_size, *ae.tempo.size()[1:])
-    lsize = (args.batch_size, *tr.encoder.inp.size()[1:])
+    nsize = (bs, *ae.note.size()[1:])
+    tsize = (bs, *ae.tempo.size()[1:])
+    lsize = (bs, *tr.encoder.inp.size()[1:])
 
     inp = torch.rand(*lsize)
 
@@ -138,11 +141,20 @@ if __name__ == '__main__':
       TRtrainset.append(dataset.Batch([inp, tar]))
 
 
+  args = config.autoencoder
   print(args)
   print(ae)
   train(ae, AEtrainset, AEvalset, args = args)
 
 
+  args = config.translator
   print(args)
   print(tr)
   train(tr, TRtrainset, TRvalset, args = args)
+
+  filename = 'model/%s.para'%args.name
+  torch.save(tr.state_dict(), 'model/%s.para'%args.name)
+  
+  sd = model.load(filename)
+  for name, para in tr.named_parameters():
+    assert all(sd[name].view(-1) == para.data.view(-1))
