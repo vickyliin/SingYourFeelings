@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import dataset
+import config
 from config import *
 
 import torch
@@ -37,8 +38,10 @@ def load(filename):
   return sd
 
 class MusicEncoder(nn.Module):
-  L, Ci, E, K, Co, M = music.L, music.Ci, music.E, music.K, music.Co, M
-  dp = music.dp
+  L, Ci, E, K, Co, M = \
+    config.music.L, config.music.Ci, config.music.E, \
+    config.music.K, config.music.Co, config.M
+  dp = config.music.dp
   assert L >= K, 'MusicEncoder: Seq length should >= kernel size'
   @param(
     note = ['Tensor', (300, Ci, E, L)], 
@@ -76,8 +79,10 @@ class MusicEncoder(nn.Module):
     return out
 
 class MusicDecoder(nn.Module):
-  L, Ci, E, K, Co, M = music.L, music.Ci, music.E, music.K, music.Co, M
-  dp = music.dp
+  L, Ci, E, K, Co, M = \
+    config.music.L, config.music.Ci, config.music.E, \
+    config.music.K, config.music.Co, config.M
+  dp = config.music.dp
   assert L >= K, 'MusicDecoder: Seq length should >= kernel size'
   @param()
   def __init__(self):
@@ -113,8 +118,9 @@ class MusicDecoder(nn.Module):
 
 
 class LyricsEncoder(nn.Module):
-  L, E, K, Co, M = lyrics.L, lyrics.E, lyrics.K, lyrics.Co, M
-  dp = lyrics.dp
+  L, E, K, Co, M = \
+    config.lyrics.L, config.lyrics.E, config.lyrics.K, config.lyrics.Co, config.M
+  dp = config.lyrics.dp
   assert L >= K, 'LyricsEncoder: Seq length should >= kernel size'
   @param(inp = ['LongTensor', (300, L)])
   def __init__(self, vs):
@@ -158,7 +164,7 @@ def translateWrap(translator):
   return translate
 
 class Translator(nn.Module):
-  L, Ci, E = music.L, music.Ci, music.E
+  L, Ci, E = config.music.L, config.music.Ci, config.music.E
   @param(
     note = ['Tensor', (300, Ci, E, L)], 
     tempo = ['Tensor', (300, Ci)],
@@ -192,9 +198,9 @@ class Translator(nn.Module):
 if __name__ == '__main__':
   vsL, vsM = len(dataset.lex.vocab), 5
   n = 3
-  lyr = torch.floor( torch.rand(n, lyrics.L) * vsL )
-  note = torch.floor( torch.rand(n, music.Ci, music.L, music.E) * vsM )
-  tempo = torch.floor( torch.rand(n, music.Ci) * vsM )
+  lyr = torch.floor( torch.rand(n, config.lyrics.L) * vsL )
+  note = torch.floor( torch.rand(n, config.music.Ci, config.music.L, config.music.E) * vsM )
+  tempo = torch.floor( torch.rand(n, config.music.Ci) * vsM )
   mus = (note, tempo)
 
   le = LyricsEncoder(vsL)
@@ -227,4 +233,3 @@ if __name__ == '__main__':
   assert outTr[0].size() == note.size()
   assert outTr[1].size() == tempo.size()
 
-  torch.save(tr.state_dict(), 'model/test.para')
