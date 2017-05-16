@@ -15,7 +15,10 @@ def songlink(url):
     return titlelinks
 def songtext(url,path):
     result=requests.get(url)
-    page=result.text.encode('ISO-8859-1').decode('big5')
+    try:
+        page=result.text.encode('ISO-8859-1').decode('big5')
+    except:
+        page=result.text.encode('ISO-8859-1').decode('hkscs')
     doc=BeautifulSoup(page,"html.parser")
     test1=doc.find_all('td')
     titlyr=[t.text for t in test1]
@@ -23,19 +26,31 @@ def songtext(url,path):
     while title=='':
         title=titlyr.pop(0)
         title=re.sub('\u3000','',title)
+        title=re.sub('\n','',title)
+        title=re.sub('\r','',title)
+        title=re.sub('"',' ',title)
     titletxt=title+'.txt'
     lyr='\n'.join(titlyr)
+    lyr=re.sub('\(轉載請標明出處，否則請勿引用\)','',lyr)
     lyr=lyr.strip('\n')
     lyr=re.sub('\xa0','',lyr)
     fout=open(os.path.join(path,titletxt),'wt')
     fout.write(lyr)
     fout.close()
     song=doc.find('bgsound')
-    songurl=song.get('src')
     try:
+        songurl=song.get('src')
         songurl='http://sql.jaes.ntpc.edu.tw/javaroom/midi/alas/Ch/'+songurl
         titlemid=title+'.mid'
         urllib.request.urlretrieve(songurl,os.path.join(path,titlemid))
     except:
-        print(title,'has some problem')
+        try:
+            test1=doc.find_all('a')
+            b=test1[1].get('href')
+            songurl='http://sql.jaes.ntpc.edu.tw/javaroom/midi/alas/Ch/'+b
+            titlemid=title+'.mid'
+            urllib.request.urlretrieve(songurl,os.path.join(path,titlemid))
+        except Exception as pro:
+            print(title,'has some problem')
+            print(pro)
         

@@ -17,5 +17,6 @@ def mdownload(path):
         for songurl in titlelinks:
             try:
                 midi.songtext(songurl,path)
-            except:
+            except Exception as pro:
                 print(songurl,'\n has some problems')
+                print(pro)
