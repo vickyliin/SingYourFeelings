@@ -3,9 +3,6 @@ import requests
 import re
 import urllib
 import os
-import logging
-logger = logging.getLogger('MIDI')
-
 def songlink(url):
     result=requests.get(url)
     page=result.text
@@ -38,7 +35,6 @@ def songtext(url,path):
     lyr=re.sub('\(轉載請標明出處，否則請勿引用\)','',lyr)
     lyr=lyr.strip('\n')
     lyr=re.sub('\xa0','',lyr)
-
     fout=open(os.path.join(path,titletxt),'wt')
     fout.write(lyr)
     fout.close()
@@ -57,5 +53,5 @@ def songtext(url,path):
             urllib.request.urlretrieve(songurl,os.path.join(path,titlemid))
         except Exception as pro:
             logger.error(title)
-            logger.error(e)
+            logger.error(pro)
         
