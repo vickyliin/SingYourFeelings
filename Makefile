@@ -17,5 +17,5 @@ midi2csv: $(CSV_FILES)
 $(CSV_DIR) $(RAW_DIR):
 	mkdir -p $@
 
-$(CSV_FILES): $(CSV_DIR)/%.csv : $(RAW_DIR)/%.mid | $(RAW_DIR)/%.txt $(CSV_DIR)
+$(CSV_FILES): $(CSV_DIR)/%.csv : $(RAW_DIR)/%.mid | $(CSV_DIR)
 	-$(MIDICSV) $< $@

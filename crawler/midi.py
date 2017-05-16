@@ -3,6 +3,8 @@ import requests
 import re
 import urllib
 import os
+import logging
+logger = logging.getLogger('MIDI')
 def songlink(url):
     result=requests.get(url)
     page=result.text
@@ -17,7 +19,7 @@ def songtext(url,path):
     result=requests.get(url)
     try:
         page=result.text.encode('ISO-8859-1').decode('big5')
-    except:
+    except Exception:
         page=result.text.encode('ISO-8859-1').decode('hkscs')
     doc=BeautifulSoup(page,"html.parser")
     test1=doc.find_all('td')
@@ -44,7 +46,7 @@ def songtext(url,path):
         songurl='http://sql.jaes.ntpc.edu.tw/javaroom/midi/alas/Ch/'+songurl
         titlemid=title+'.mid'
         urllib.request.urlretrieve(songurl,os.path.join(path,titlemid))
-    except:
+    except Exception:
         try:
             test1=doc.find_all('a')
             b=test1[1].get('href')
