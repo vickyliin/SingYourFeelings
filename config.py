@@ -11,14 +11,25 @@ class Args(type):
   def __repr__(self):
     return str(self)
 
-class train_ae(metaclass=Args):
-  optim = 'Adam'#'RMSprop'
+class autoencoder(metaclass=Args):
+  optim = 'Adam'
   optim_args = dict(
     lr = 3e-3
   )
   batch_size = 30
   max_epoch = 10000
   endure = 20
+  loss = 'MSELoss'
+
+class translator(metaclass=Args):
+  name = 'test'
+  optim = 'RMSprop'
+  optim_args = dict(
+    lr = 3e-3
+  )
+  batch_size = 30
+  max_epoch = 10000
+  endure = 30
   loss = 'MSELoss'
 
 class music(metaclass=Args):
@@ -58,6 +69,5 @@ class lyrics(metaclass=Args):
 
 # encoded vector size
 M = 6 #100
-
 
 
