@@ -5,7 +5,6 @@ MIDICSV = midicsv
 PYTHON = python
 
 MIDI_FILES = $(wildcard $(RAW_DIR)/*.mid)
-LYR_FILES = $(MIDI_FILES:%.mid=%.txt)
 CSV_FILES = $(MIDI_FILES:$(RAW_DIR)/%.mid=$(CSV_DIR)/%.csv)
 
 
@@ -18,4 +17,9 @@ $(CSV_DIR) $(RAW_DIR):
 	mkdir -p $@
 
 $(CSV_FILES): $(CSV_DIR)/%.csv : $(RAW_DIR)/%.mid | $(CSV_DIR)
-	-$(MIDICSV) $< $@
+	-$(MIDICSV) "$<" "$@"
+
+
+RM = rm -d
+clean:
+	$(RM) $(RAW_DIR) $(CSV_DIR)
