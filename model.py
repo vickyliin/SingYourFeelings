@@ -45,20 +45,20 @@ class MusicEncoder(nn.Module):
   assert L >= K, 'MusicEncoder: Seq length should >= kernel size'
   @param(
     note = ['Tensor', (300, Ci, E, L)], 
-    tempo = ['Tensor', (300, Ci)],
+    tempo = ['Tensor', (300,)],
   )
   def __init__(self):
     super().__init__()
     self.conv = nn.Conv2d(self.Ci, self.Co, (self.E, self.K))
     self.pool = nn.MaxPool1d(self.L, ceil_mode=True)
-    self.linear = nn.Linear(self.Ci+self.Co, self.M)
+    self.linear = nn.Linear(1+self.Co, self.M)
     self.dropout = nn.Dropout(self.dp, inplace=True)
     self.activate = nn.Sigmoid()
 
   def forward(self, inp):
     note, tempo = inp
     # note: torch tensor, N x Ci x E x L
-    # tempo: torch tensor, N x Ci
+    # tempo: torch tensor, N
     # out: torch tensor variable, N x M
     assert type(note).__name__.endswith('Tensor')
     note = self.note.resize_(note.size()).copy_(note)
@@ -69,8 +69,9 @@ class MusicEncoder(nn.Module):
 
     hid = self.conv(note).squeeze(2)              # N x Co x L-
     hid = self.pool(hid).squeeze(-1)              # N x Co
-    hid = torch.cat([tempo, hid], 1)              # N x Ci+Co
     self.dropout(hid)
+
+    hid = torch.cat([tempo.view(-1,1), hid], 1)   # N x 1+Co
 
     out = self.linear(hid)                        # N x M
     self.dropout(out)
@@ -87,7 +88,7 @@ class MusicDecoder(nn.Module):
   @param()
   def __init__(self):
     super().__init__()
-    self.linear = nn.Linear(self.M, self.Ci+self.Co)
+    self.linear = nn.Linear(self.M, 1+self.Co)
     self.unpool = nn.Linear(1, self.L+self.K-1)
     self.unconv = nn.Conv1d(self.Co, self.Ci*self.E, self.K)
     self.dropout = nn.Dropout(self.dp, inplace=True)
@@ -96,11 +97,11 @@ class MusicDecoder(nn.Module):
   def forward(self, inp):
     # inp: torch tensor variable, N x M
     # note: torch tensor variable, N x Ci x E x L
-    # tempo: torch tensor variable, N x Ci
+    # tempo: torch tensor variable, N
     assert type(inp).__name__ == 'Variable'
 
-    hid = self.linear(inp)                        # N x Ci+Co
-    tempo, hid = hid[:,:self.Ci], hid[:,self.Ci:] # N x Co
+    hid = self.linear(inp)                        # N x 1+Co
+    tempo, hid = hid[:,0], hid[:,1:]              # N x Co
     hid = hid.contiguous()
     hid = self.unpool(hid.view(-1,1))             # N*Co x L+K-1
     hid = hid.view(-1, self.Co, self.L+self.K-1)  # N x Co x L+K-1
@@ -200,7 +201,7 @@ if __name__ == '__main__':
   n = 3
   lyr = torch.floor( torch.rand(n, config.lyrics.L) * vsL )
   note = torch.floor( torch.rand(n, config.music.Ci, config.music.L, config.music.E) * vsM )
-  tempo = torch.floor( torch.rand(n, config.music.Ci) * vsM )
+  tempo = torch.floor( torch.rand(n) * vsM )
   mus = (note, tempo)
 
   le = LyricsEncoder(vsL)
