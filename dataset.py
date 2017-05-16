@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import config
 
 from midiutil import MIDIFile
@@ -60,9 +61,11 @@ inp, tar: dict of (lyrics, note, tempo)
     return [ padLyrics(lyrics) for lyrics in data['lyrics'] ]
 
   def __getitem__(self, i):
+    if i >= len(self):
+      raise IndexError('Index %d out of range (%d)' % (i, len(self)-1))
     begin = self.bs * i
     end = begin + self.bs
-    if end >= len(self):
+    if end >= self.size:
       end = None
 
     lyrics, note, tempo = None, None, None
@@ -101,11 +104,9 @@ inp, tar: dict of (lyrics, note, tempo)
     
 
 if __name__ == '__main__':
-  from pprint import pprint
-  from glob import glob
   from random import randrange
   L = config.lyrics.L
-  n = 5
+  n = 50
   lyrics = [ [randrange(vs) for _ in range(randrange(2*L)+1)] for _ in range(n) ]
 
   note = []
@@ -127,5 +128,8 @@ if __name__ == '__main__':
     zip(dataset.inp['lyrics'], dataset.tar['note'])}
 
   dataset.shuffle()
-  assert all( lyr2note[tuple(dataset.inp['lyrics'][i])]\
-    == dataset.tar['note'][i] for i in range(dataset.size) )
+  for i in range(dataset.size):
+    k = tuple(dataset.inp['lyrics'][i])
+    v = dataset.tar['note'][i]
+    assert lyr2note[k] == v, '\nout: {}\ntar: {}'.format(v, lyr2note[k])
+
