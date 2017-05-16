@@ -105,6 +105,7 @@ inp, tar: dict of (lyrics, note, tempo)
 
 if __name__ == '__main__':
   from random import randrange
+  from collections import defaultdict
   L = config.lyrics.L
   n = 50
   lyrics = [ [randrange(vs) for _ in range(randrange(2*L)+1)] for _ in range(n) ]
@@ -123,13 +124,20 @@ if __name__ == '__main__':
   tar = {'note': note, 'tempo': tempo}
 
 
+  class Note():
+    def __init__(self, data):
+      self.data = torch.Tensor(data)
+    def __eq__(self, other):
+      return torch.equal(self.data, other.data)
+
   dataset = Dataset(inp, tar, 2)
-  lyr2note = {tuple(k): list(v) for k, v in \
-    zip(dataset.inp['lyrics'], dataset.tar['note'])}
+  lyr2note = defaultdict(list)
+  for k, v in zip(dataset.inp['lyrics'], dataset.tar['note']):
+    lyr2note[tuple(k)].append(Note(v))
 
   dataset.shuffle()
   for i in range(dataset.size):
     k = tuple(dataset.inp['lyrics'][i])
-    v = dataset.tar['note'][i]
-    assert lyr2note[k] == v, '\nout: {}\ntar: {}'.format(v, lyr2note[k])
+    v = Note(dataset.tar['note'][i])
+    assert v in lyr2note[k], '\nout: {}\ntar: {}'.format(v, lyr2note[k])
 
