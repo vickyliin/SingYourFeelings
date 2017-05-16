@@ -16,6 +16,13 @@ def chunk(fin):
       yield snippet, tempo[i][1]
 
   def convert(filename):
+    '''Convert a midi-csv file to music snippets.
+    input: midi-csv file name
+    output: snippet (note, tempo) list
+      note: list of track
+        track: list of note features
+      tempo: int
+    '''
     id = config.music.feat2id
     note, tempo = fin(filename)
     note = sorted(note, key=len)[-config.music.Ci:]
@@ -33,7 +40,8 @@ def diffTime(note):
   '''
   time = config.music.feat2id['time']
   n = config.music.E
-  diffs = [ f2[time]-f1[time] for f1,f2 in zip([[0]*n]+note[:-1], note) ]
+  times = [ feat[time] for feat in note ]
+  diffs = [ t2-t1 for t1,t2 in zip([0]+times[:-1], times) ]
   for i, diff in enumerate(diffs):
     note[i][time] = diff
   return note

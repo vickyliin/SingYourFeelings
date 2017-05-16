@@ -2,85 +2,105 @@ import config
 
 from midiutil import MIDIFile
 import pandas as pd
+import numpy as np
 import torch
 import word2vec
-import csv
-from collections import defaultdict
+import random
 
 lex = word2vec.load(config.lyrics.lex)
+vs = len(lex.vocab)
 
 def lyr2vec(lyr):
   vec = torch.LongTensor(0)
   return vec
 
-def padNote(note):
-  m = max(len(track) for track in note.values())
-  n = config.music.E
-  note = [ track + [ [0]*n for _ in range( m-len(track) ) ]\
-    for track in note.values() if track ]
-  return note
-
-def midiCsvReader(filename):
-  with open(filename, 'r') as f:
-    for record in csv.reader(f):
-      record = [ s.strip() for s in record ]
-      track, time, rtype = record[:3]
-      time, track = int(time), int(track)
-      value = [ int(s) for s in record[3:] if s.isdigit() ]
-      yield track, rtype, time, value
-
-def midi2vec(midi):
-  '''
-From midi-csv file to torch tensor.
-input:
-  midi: midi-csv filename
-output:
-  note: 3d torch float tensor, Ci x L x E
-  tempo: 2d torch float tensor, Lt x [time, value]
-  '''
-  id = config.music.feat2id
-  note, tempo, open_note = defaultdict(list), [], {}
-  for track, rtype, time, value in midiCsvReader(midi):
-    if rtype == 'Tempo':
-      tempo.append([time, value[0]])
-    elif rtype.startswith('Note'):
-      channel, pitch, volume = value
-      # close the note, add to a track in the note
-      if (track, channel, pitch) in open_note:
-        if volume == 0 or rtype == 'Note_off_c':
-          feat = open_note.pop((track,channel,pitch))
-          feat[id['duration']] = time - feat[id['time']]
-          note[track, channel].append(feat)
-      # open a new note
-      elif rtype == 'Note_on_c':
-        feat = [0]*len(id)
-        feat[id['pitch']] = pitch
-        feat[id['volume']] = volume
-        feat[id['time']] = time
-        open_note[track,channel,pitch] = feat
-
-  note = padNote(note)
-  return torch.Tensor(note), torch.Tensor(tempo)
-
 def vec2midi(vec):
   midi = MIDIFile(config.music.Ci)
   return midi
 
-class Batch(tuple):
-  def __len__(self):
-    return self[0][0].size(0)
-
 class Dataset:
-  def __init__(self, filename):
-    self.data = pd.read_json(DATA, lines = 1)
+  def __init__(self, data, batch_size, pad_value):
+    '''
+    data: dict of (lyrics, note, tempo)
+      lyrics: list, lyrics vector
+      note: list, note matrix of the music snippet
+      tempo: int, tempo of the music snippet
+    '''
+    self.bs = batch_size
+    self.data = data
+
+    if 'lyrics' in self.data:
+      self.padLyrics(pad_value)
+    if 'note' in self.data:
+      self.padNote()
+
+  def padNote(self):
+    def padNote(note):
+      E, L = config.music.E, config.music.L
+      for track in note:
+        if len(track) < L:
+          yield track + [ [0]*E for _ in range(L-len(track)) ]
+        else:
+          yield track[:L]
+
+    self.data['note'] = [ list(padNote(note)) for note in self.data['note'] ]
+
+  def padLyrics(self, pv):
+    def padLyrics(lyr):
+      L = config.music.L
+      if len(lyr) < L:
+        return lyr + [pv]*( L-len(lyr) )
+      else:
+        return lyr[:L]
+
+    self.data['lyrics'] = [ padLyrics(lyrics) for lyrics in self.data['lyrics'] ]
 
   def __getitem__(self, i):
-    # get batch
-    return Batch(inp, tar)
+    begin = self.bs * i
+    end = begin + self.bs
+    if end >= len(self.data):
+      end = None
+
+    print(begin, end)
+    lyrics, note, tempo = None, None, None
+    if 'lyrics' in self.data:
+      lyrics = torch.Tensor(self.data['lyrics'][begin:end])
+    if 'note' in self.data:
+      note = torch.Tensor(self.data['note'][begin:end])
+      tempo = torch.Tensor(self.data['tempo'][begin:end])
+
+    return lyrics, note, tempo
 
   def shuffle(self):
-    pass
+    data = list(self.data.values())
+    data = list(zip(*data))
+    random.shuffle(data)
+    data = [ list(d) for d in zip(*data) ]
+    for k, v in zip(self.data, data):
+      self.data[k] = v
 
-  def size(self):
-    return len(self.data)
+if __name__ == '__main__':
+  from pprint import pprint
+  from glob import glob
+  from random import randrange
+  L = config.lyrics.L
+  n = 5
+  lyrics = [ [randrange(vs) for _ in range(randrange(2*L)+1)] for _ in range(n) ]
+
+  note = []
+  L, E = config.music.L, config.music.E
+  for _ in range(n):
+    snippet = []
+    for _ in range(config.music.Ci):
+      track = [ [randrange(100) for _ in range(E)] for _ in range(randrange(2*L))]
+      snippet.append(track)
+    note.append(snippet)
+  tempo = [ randrange(10000) for _ in range(n)]
+
+
+  data = {'lyrics': lyrics, 'note': note, 'tempo': tempo}
+  pprint(data)
+
+
+  dataset = Dataset(data, 2, 0)
 
