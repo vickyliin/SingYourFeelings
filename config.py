@@ -34,6 +34,7 @@ class translator(metaclass=Args):
 
 class music(metaclass=Args):
   '''
+    T: time period of a music sneppet
     L: max music length 
     Ci: music track number
     E: note feature number
@@ -50,6 +51,7 @@ class music(metaclass=Args):
   K = 2 #10
   Co = 200
   dp = 0.5
+  T = 1000
 
 class lyrics(metaclass=Args):
   '''

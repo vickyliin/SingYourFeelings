@@ -3,6 +3,29 @@ import config
 from collections import defaultdict
 import csv
 
+def chunk(fin):
+  def chunk(note, tempo):
+    snippets = defaultdict(list)
+    for track in note:
+      for time, track_snippet in chunkTrack(track):
+        snippets[time].append(track_snippet)
+    i = 0
+    for time, snippet in snippets.items():
+      if time >= tempo[i][0]:
+        i += 1
+      yield snippet, tempo[i][1]
+
+  def convert(filename):
+    id = config.music.feat2id
+    note, tempo = fin(filename)
+    note = sorted(note, key=len)[-config.music.Ci:]
+    note = [ sorted(track, 
+      key = lambda feat: feat[id['time']]) \
+      for track in note]
+    return list(chunk(note, tempo))
+
+  return convert
+
 def diffTime(note):
   '''
   input: a TRACK of notes with E features, time is the absolute time
@@ -15,7 +38,7 @@ def diffTime(note):
     note[i][time] = diff
   return note
 
-def midiCsvEventReader(filename):
+def midiCsvReader(filename):
   with open(filename, 'r') as f:
     for record in csv.reader(f):
       record = [ s.strip() for s in record ]
@@ -24,9 +47,10 @@ def midiCsvEventReader(filename):
       value = [ int(s) for s in record[3:] if s.isdigit() ]
       yield track, rtype, time, value
 
-def midiCsvReader(filename):
+@chunk
+def convert(filename):
   '''
-From midi-csv file to note and tempo.
+Convert midi-csv file to note and tempo.
 input:
   midi: midi-csv filename
 output:
@@ -38,7 +62,7 @@ output:
   '''
   id = config.music.feat2id
   note, tempo, open_note = defaultdict(list), [], {}
-  for track, rtype, time, value in midiCsvEventReader(filename):
+  for track, rtype, time, value in midiCsvReader(filename):
     if rtype == 'Tempo':
       tempo.append([time, value[0]])
     elif rtype.startswith('Note'):
@@ -58,23 +82,11 @@ output:
         open_note[track,channel,pitch] = feat
 
   note = [ track for track in note.values() ]
-  note = sorted(note, key=len)[-config.music.Ci:]
   return note, tempo
-
-def chunk(note, tempo):
-  note_snippets = defaultdict(list)
-  for tid, track in enumerate(note):
-    for time, track_snippet in chunkTrack(track):
-      note_snippets[time].append(track_snippet)
-  i = 0
-  for time, note_snippet in note_snippets.items():
-    if time >= tempo[i][0]:
-      i += 1
-    yield note_snippet, tempo[i][1]
 
 def chunkTrack(note):
   '''
-  input: a TACK of note
+  input: a TRACK of note
   output: (time, snippet)
     time: the time at which the snippet start
     snippet: a snippet of notes whose feature time is diffTime.
@@ -89,8 +101,3 @@ def chunkTrack(note):
       snippet = []
     snippet.append(feat)
 
-def midi2vec(midi):
-  '''
-  note, tempo = midiCsvReader(midi)
-  for snippets in chunk(note, tempo):
-  '''
