@@ -27,10 +27,7 @@ def songtext(url,path):
     title=''
     while title=='':
         title=titlyr.pop(0)
-        title=re.sub('\u3000','',title)
-        title=re.sub('\n','',title)
-        title=re.sub('\r','',title)
-        title=re.sub('"',' ',title)
+        title=re.sub('[":]','-',title)
         title = ''.join(title.split())
     titletxt=title+'.txt'
     lyr='\n'.join(titlyr)
