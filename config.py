@@ -1,15 +1,12 @@
 import yaml
 
 class Args(type):
-  def __str__(self):
+  def __repr__(self):
     args = { k: v for k, v in vars(self).items() if not k.startswith('_') }
     if self.__doc__:
       args = {'Description': yaml.load(self.__doc__), 'Data':args}
     s = yaml.dump({self.__name__: args}, default_flow_style=False)
     return s
-
-  def __repr__(self):
-    return str(self)
 
 class autoencoder(metaclass=Args):
   optim = 'Adam'

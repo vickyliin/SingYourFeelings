@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import torch
 import word2vec
-import random
+import random, yaml
 
 lex = word2vec.load(config.lyrics.lex)
 vs = len(lex.vocab)
@@ -21,10 +21,10 @@ def vec2midi(vec):
 class Dataset:
   def __init__(self, inp, tar, batch_size, pad_value=0):
     '''
-    inp, tar: dict of (lyrics, note, tempo)
-      lyrics: list, lyrics vector
-      note: list, note matrix of the music snippet
-      tempo: int, tempo of the music snippet
+inp, tar: dict of (lyrics, note, tempo)
+  lyrics: list, lyrics vector
+  note: list, note matrix of the music snippet
+  tempo: int, tempo of the music snippet
     '''
     self.bs = batch_size
     self.inp = inp
@@ -33,10 +33,10 @@ class Dataset:
     for name, data in [('inp',inp), ('tar',tar)]:
       if 'lyrics' in data:
         getattr(self, name)['lyrics'] = self.padLyrics(data, pad_value)
-        self.n_batch = len(data['lyrics'])//batch_size+1
+        self.size = len(data['lyrics'])
       if 'note' in data:
         getattr(self, name)['note'] = self.padNote(data)
-        self.n_batch = len(data['note'])//batch_size+1
+        self.size = len(data['note'])
 
   def padNote(self, data):
     def padNote(note):
@@ -77,15 +77,27 @@ class Dataset:
     return tuple(pair)
 
   def shuffle(self):
-    data = list(self.data.values())
+    data = list(self.inp.values())+list(self.tar.values())
     data = list(zip(*data))
     random.shuffle(data)
     data = [ list(d) for d in zip(*data) ]
-    for k, v in zip(self.data, data):
-      self.data[k] = v
+    for k, v in zip(self.inp, data[:len(self.inp)]):
+      self.inp[k] = v
+    for k, v in zip(self.tar, data[len(self.inp):]):
+      self.tar[k] = v
 
   def __len__(self):
-    return self.n_batch
+    return self.size//self.bs + 1
+
+  def __repr__(self):
+    return yaml.dump({'Dataset': dict(
+      data = dict(
+        inp = ', '.join(list(self.inp)),
+        tar = ', '.join(list(self.tar)),
+      ),
+      size = self.size,
+      batch_size = self.bs,
+    )}, default_flow_style=False)
     
 
 if __name__ == '__main__':
@@ -106,10 +118,14 @@ if __name__ == '__main__':
     note.append(snippet)
   tempo = [ randrange(10000) for _ in range(n)]
 
-
   inp = {'lyrics': lyrics}
   tar = {'note': note, 'tempo': tempo}
-  pprint(inp)
-  pprint(tar)
+
 
   dataset = Dataset(inp, tar, 2)
+  lyr2note = {tuple(k): list(v) for k, v in \
+    zip(dataset.inp['lyrics'], dataset.tar['note'])}
+
+  dataset.shuffle()
+  assert all( lyr2note[tuple(dataset.inp['lyrics'][i])]\
+    == dataset.tar['note'][i] for i in range(dataset.size) )
