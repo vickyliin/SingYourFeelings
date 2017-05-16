@@ -23,7 +23,7 @@ def batchLoss(model, dataset, criterion, train = True):
     epoch_loss[0] += loss[0].data[0]
     epoch_loss[1] += loss[1].data[0]
 
-  loss = [ (loss/dataset.size())**.5 for loss in epoch_loss ]
+  loss = [ (loss/len(dataset))**.5 for loss in epoch_loss ]
   loss = (loss[0]*loss[1])**.5
   fmt = '['+', '.join(['{:.4f}']*Ci)+']'
   '''
@@ -110,8 +110,6 @@ if __name__ == '__main__':
   class Dataset(list):
     def shuffle(self):
       random.shuffle(self)
-    def size(self):
-      return sum([ len(batch) for batch in self ])
 
   AEtrainset = Dataset()
   AEvalset = Dataset()
@@ -124,7 +122,7 @@ if __name__ == '__main__':
   bs = config.autoencoder.batch_size
   for i in range(2*n):
     nsize = (bs, *ae.note.size()[1:])
-    tsize = (bs, *ae.tempo.size()[1:])
+    tsize = (bs,)
     lsize = (bs, *tr.encoder.inp.size()[1:])
 
     inp = torch.rand(*lsize)
@@ -134,11 +132,11 @@ if __name__ == '__main__':
     tar = (note, tempo)
 
     if i < n:
-      AEvalset.append(dataset.Batch([tar, tar]))
-      TRvalset.append(dataset.Batch([inp, tar]))
+      AEvalset.append((tar, tar))
+      TRvalset.append((inp, tar))
     else:
-      AEtrainset.append(dataset.Batch([tar, tar]))
-      TRtrainset.append(dataset.Batch([inp, tar]))
+      AEtrainset.append((tar, tar))
+      TRtrainset.append((inp, tar))
 
 
   args = config.autoencoder

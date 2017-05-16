@@ -19,22 +19,26 @@ def vec2midi(vec):
   return midi
 
 class Dataset:
-  def __init__(self, data, batch_size, pad_value):
+  def __init__(self, inp, tar, batch_size, pad_value=0):
     '''
-    data: dict of (lyrics, note, tempo)
+    inp, tar: dict of (lyrics, note, tempo)
       lyrics: list, lyrics vector
       note: list, note matrix of the music snippet
       tempo: int, tempo of the music snippet
     '''
     self.bs = batch_size
-    self.data = data
+    self.inp = inp
+    self.tar = tar
 
-    if 'lyrics' in self.data:
-      self.padLyrics(pad_value)
-    if 'note' in self.data:
-      self.padNote()
+    for name, data in [('inp',inp), ('tar',tar)]:
+      if 'lyrics' in data:
+        getattr(self, name)['lyrics'] = self.padLyrics(data, pad_value)
+        self.n_batch = len(data['lyrics'])//batch_size+1
+      if 'note' in data:
+        getattr(self, name)['note'] = self.padNote(data)
+        self.n_batch = len(data['note'])//batch_size+1
 
-  def padNote(self):
+  def padNote(self, data):
     def padNote(note):
       E, L = config.music.E, config.music.L
       for track in note:
@@ -43,9 +47,9 @@ class Dataset:
         else:
           yield track[:L]
 
-    self.data['note'] = [ list(padNote(note)) for note in self.data['note'] ]
+    return [ list(padNote(note)) for note in data['note'] ]
 
-  def padLyrics(self, pv):
+  def padLyrics(self, data, pv):
     def padLyrics(lyr):
       L = config.music.L
       if len(lyr) < L:
@@ -53,23 +57,24 @@ class Dataset:
       else:
         return lyr[:L]
 
-    self.data['lyrics'] = [ padLyrics(lyrics) for lyrics in self.data['lyrics'] ]
+    return [ padLyrics(lyrics) for lyrics in data['lyrics'] ]
 
   def __getitem__(self, i):
     begin = self.bs * i
     end = begin + self.bs
-    if end >= len(self.data):
+    if end >= len(self):
       end = None
 
-    print(begin, end)
     lyrics, note, tempo = None, None, None
-    if 'lyrics' in self.data:
-      lyrics = torch.Tensor(self.data['lyrics'][begin:end])
-    if 'note' in self.data:
-      note = torch.Tensor(self.data['note'][begin:end])
-      tempo = torch.Tensor(self.data['tempo'][begin:end])
+    pair = [(),()]
+    for ii, data in [(0,self.inp), (1,self.tar)]:
+      if 'lyrics' in data:
+        pair[ii] = torch.Tensor(data['lyrics'][begin:end])
+      if 'note' in data:
+        pair[ii] += (torch.Tensor(data['note'][begin:end]),)
+        pair[ii] += (torch.Tensor(data['tempo'][begin:end]),)
 
-    return lyrics, note, tempo
+    return tuple(pair)
 
   def shuffle(self):
     data = list(self.data.values())
@@ -78,6 +83,10 @@ class Dataset:
     data = [ list(d) for d in zip(*data) ]
     for k, v in zip(self.data, data):
       self.data[k] = v
+
+  def __len__(self):
+    return self.n_batch
+    
 
 if __name__ == '__main__':
   from pprint import pprint
@@ -98,9 +107,9 @@ if __name__ == '__main__':
   tempo = [ randrange(10000) for _ in range(n)]
 
 
-  data = {'lyrics': lyrics, 'note': note, 'tempo': tempo}
-  pprint(data)
+  inp = {'lyrics': lyrics}
+  tar = {'note': note, 'tempo': tempo}
+  pprint(inp)
+  pprint(tar)
 
-
-  dataset = Dataset(data, 2, 0)
-
+  dataset = Dataset(inp, tar, 2)
