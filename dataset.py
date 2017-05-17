@@ -3,7 +3,6 @@ import config
 
 from midiutil import MIDIFile
 import pandas as pd
-import numpy as np
 import torch
 import word2vec
 import random, yaml
@@ -124,7 +123,7 @@ if __name__ == '__main__':
   tar = {'note': note, 'tempo': tempo}
 
 
-  class Note():
+  class Note:
     def __init__(self, data):
       self.data = torch.Tensor(data)
     def __eq__(self, other):

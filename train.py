@@ -7,7 +7,6 @@ import config
 from copy import deepcopy
 
 def batchLoss(model, dataset, criterion, train = True):
-  Ci = model.Ci
   epoch_loss = [0, 0]
   loss = [0, 0]
   for batch in dataset:
@@ -25,22 +24,9 @@ def batchLoss(model, dataset, criterion, train = True):
 
   loss = [ (loss/len(dataset))**.5 for loss in epoch_loss ]
   loss = (loss[0]*loss[1])**.5
-  fmt = '['+', '.join(['{:.4f}']*Ci)+']'
-  '''
-  if type(inp) == tuple:
-    print('  InpTempo:', fmt.format(*inp[1][0]))
-    print('  InpNotes:', fmt.format(*inp[0][0,:,0,0]))
-  else:
-    print('  InpLyr:', fmt.format(*inp[0]))
-  print('  OutTempo:', fmt.format(*out[1].data[0]))
-  print('  OutNotes:', fmt.format(*out[0].data[0,:,0,0]))
-  '''
+
   print(' - %s: ' % ['Validate', 'Train'][train], end='')
   print('{:.4f}'.format(loss), end='')
-  '''
-  if not train:
-    print()
-  '''
   yield loss, True
 
 def validate(model, valset, criterion):

@@ -159,7 +159,7 @@ def translateWrap(translator):
   def translate(s):
     inp = dataset.lyr2vec(s)
     dec = translator(inp)
-    out = datast.vec2midi(dec)
+    out = dataset.vec2midi(dec)
     return out
 
   return translate
