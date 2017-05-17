@@ -14,9 +14,9 @@ makedirs(OUT_PATH, exist_ok=True)
 {
   id: int,
   raw: [lyrics (str), music path (str)],
-  lyrics: lyrics sequence vector (list float),
+  lyrics: lyrics sequence vector (list int),
   music: {
-    note: note sequence matrix ( 2d list int),
+    note: note sequence matrix ( 3d list int),
     tempo: tempo of different track (list int),
   }
 }
