@@ -40,12 +40,17 @@
     ```bash
     pip install -r requirement.txt
     ```
-    > pytorch shoould be installed manually from the [website](http://pytorch.org/)
+    > pytorch should be installed manually from the [website](http://pytorch.org/)
+
+    [jseg3](https://github.com/amigcamel/Jseg/tree/jseg3) should be installed by 
+    ```bash
+    pip install https://github.com/amigcamel/Jseg/archive/jseg3.zip
+    ```
 
 - [midicsv](http://www.fourmilab.ch/webtools/midicsv/)
     ```bash
     wget http://www.fourmilab.ch/webtools/midicsv/midicsv-1.1.tar.gz
-    tar zxf midicsv-1.1.tar.gz
+    tar zxvf midicsv-1.1.tar.gz
     cd midicsv-1.1
     make
     make install INSTALL_DEST=path_to_install
