@@ -22,6 +22,9 @@
     - {model name}.jsonl
     - {model name}-{id}.mid
 - platform/
+- gui/
+    - index.html
+    - ...
 
 - dataset.py
 - model.py
@@ -42,7 +45,7 @@
 - [midicsv](http://www.fourmilab.ch/webtools/midicsv/)
     ```bash
     wget http://www.fourmilab.ch/webtools/midicsv/midicsv-1.1.tar.gz
-    tar zxcf midicsv-1.1.tar.gz
+    tar zxf midicsv-1.1.tar.gz
     cd midicsv-1.1
     make
     make install INSTALL_DEST=path_to_install
