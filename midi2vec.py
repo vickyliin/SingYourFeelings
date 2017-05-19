@@ -13,7 +13,6 @@ def chunk(fin):
     for time, snippet in snippets.items():
       while time > tempo[i][0] and i < len(tempo)-1:
         i += 1
-      print(i, tempo)
       yield snippet, tempo[i-1][1]
 
   def convert(filename):
