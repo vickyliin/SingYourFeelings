@@ -40,24 +40,27 @@ def genWordEmbedding(files='data/seg/*.txt', save_as='data/word-vectors.txt'):
   # set UNK's vector to mean of all vectors
   w2v.vectors[w2v.vocab_hash[UNK]] = np.mean(w2v.vectors, axis=0)
   with open(save_as, "w") as corpus: # w2v.save
-    corpus.write("%d %d\n" % (w2v.vectors.shape[0], w2v.vectors.shape[1]))
+    corpus.write("%d %d\n" % w2v.vectors.shape)
     for i in range(w2v.vectors.shape[0]):
-      corpus.write(w2v.vocab[i]+" "+" ".join([str(v)[:9] for v in w2v.vectors[i]])+"\n")
+      print(w2v.vocab[i], *(str(v)[:9] for v in w2v.vectors[i]), file=corpus)
   os.remove(corpus_path)
   
 
 w2v = None
-def convert(lyrics, usingW2V="data/word-vectors.txt"):
+def convert(lyrics, usingW2V="data/word-vectors.txt", is_file=True):
+  """Convert lyrics to word id list.
+  input:
+    lyrics: input str or file name
+  """
   global w2v
-  def word_id(word):
-    if t in w2v.vocab_hash:
-      return w2v.vocab_hash[t]
-    else:
-      return w2v.vocab_hash[UNK]
+  word_id = lambda t: w2v.vocab_hase[t] if t in w2v.vocab_hash else w2v.vocab_hash[UNK]
+  if is_file: # file
+    with open(lyrics) as f:
+      lyrics = f.read()
   if w2v==None:
     w2v = word2vec.load(usingW2V)
   terms = cut(lyrics)
-  return [word_id(t) for t in terms]
+  return map(word_id, terms)
 
 if __name__=='__main__':
   print('Will segmentalize/make word embedding for files in data/raw/*.txt')
