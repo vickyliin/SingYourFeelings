@@ -20,7 +20,9 @@ $(CSV_DIR) $(RAW_DIR) $(SEG_DIR):
 	mkdir -p $@
 
 $(CSV_FILES): $(CSV_DIR)/%.csv : $(RAW_DIR)/%.mid | $(CSV_DIR)
-	-$(MIDICSV) "$<" "$@"
+	-$(MIDICSV) "$<" "$@__"
+	iconv -f ISO-8859-1 -t utf-8 "$@__" > "$@" 
+	rm "$@__"
 
 word2vec: $(WORD2VEC) 
 

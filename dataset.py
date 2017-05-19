@@ -6,6 +6,8 @@ import pandas as pd
 import torch
 import word2vec
 import random, yaml
+import lyrics2vec as l2v
+import midi2vec as m2v
 
 lex = word2vec.load(config.lyrics.lex)
 vs = len(lex.vocab)
@@ -101,15 +103,34 @@ inp, tar: dict of (lyrics, note, tempo)
       batch_size = self.bs,
     )}, default_flow_style=False)
     
+def loadData(lyr_path="data/seg/*.txt", midi_path="data/csv/*.csv"):
+  import glob, os
+  name = lambda x: os.path.splitext(os.path.basename(x))[0]
+  lyr_path, midi_path = list(glob.glob(lyr_path)), list(glob.glob(midi_path))
+  both = set(map(name, lyr_path)).intersection(set(map(name, midi_path)))
+  lyr_path  = list(filter(lambda n:name(n) in both, lyr_path))
+  midi_path = list(filter(lambda n:name(n) in both, midi_path))
+  lyr_path.sort( key=lambda f: os.path.basename(f))
+  midi_path.sort(key=lambda f: os.path.basename(f))
+  for lyr, midi in zip(lyr_path, midi_path):
+    yield lyr, midi
 
 if __name__ == '__main__':
   from random import randrange
   from collections import defaultdict
   L = config.lyrics.L
   n = 50
+
+  lyrics, note, tempo = [], [], []
+
+  for lyrics_path, midi_path in loadData():
+      print(midi_path)
+      lyr = l2v.convert(lyrics_path)
+      n, t = m2v.convert(midi_path)
+
+  """
   lyrics = [ [randrange(vs) for _ in range(randrange(2*L)+1)] for _ in range(n) ]
 
-  note = []
   L, E = config.music.L, config.music.E
   for _ in range(n):
     snippet = []
@@ -118,6 +139,7 @@ if __name__ == '__main__':
       snippet.append(track)
     note.append(snippet)
   tempo = [ randrange(10000) for _ in range(n)]
+  """
 
   inp = {'lyrics': lyrics}
   tar = {'note': note, 'tempo': tempo}
