@@ -53,14 +53,16 @@ def convert(lyrics, usingW2V="data/word-vectors.txt", is_file=True):
     lyrics: input str or file name
   """
   global w2v
-  word_id = lambda t: w2v.vocab_hase[t] if t in w2v.vocab_hash else w2v.vocab_hash[UNK]
+  word_id = lambda t: w2v.vocab_hash[t] if t in w2v.vocab_hash else w2v.vocab_hash[UNK]
   if is_file: # file
     with open(lyrics) as f:
       lyrics = f.read()
+    lyrics = lyrics.split()
+  else:
+    terms = cut(lyrics)
   if w2v==None:
     w2v = word2vec.load(usingW2V)
-  terms = cut(lyrics)
-  return map(word_id, terms)
+  return list(map(word_id, lyrics))
 
 if __name__=='__main__':
   print('Will segmentalize/make word embedding for files in data/raw/*.txt')

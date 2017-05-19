@@ -123,27 +123,19 @@ if __name__ == '__main__':
 
   lyrics, note, tempo = [], [], []
 
+  print("Loading training data ...")
   for lyrics_path, midi_path in loadData():
-      print(midi_path)
-      lyr = l2v.convert(lyrics_path)
-      n, t = m2v.convert(midi_path)
-
-  """
-  lyrics = [ [randrange(vs) for _ in range(randrange(2*L)+1)] for _ in range(n) ]
-
-  L, E = config.music.L, config.music.E
-  for _ in range(n):
-    snippet = []
-    for _ in range(config.music.Ci):
-      track = [ [randrange(100) for _ in range(E)] for _ in range(randrange(2*L))]
-      snippet.append(track)
-    note.append(snippet)
-  tempo = [ randrange(10000) for _ in range(n)]
-  """
+    print(lyrics_path)
+  
+    lyr = l2v.convert(lyrics_path)
+    for n, t in m2v.convert(midi_path):
+      lyrics.append(lyr)
+      note.append(n)
+      tempo.append(t)
+  print("Done")
 
   inp = {'lyrics': lyrics}
   tar = {'note': note, 'tempo': tempo}
-
 
   class Note:
     def __init__(self, data):
