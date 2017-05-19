@@ -1,44 +1,67 @@
 #!/usr/bin/env python3
 from jseg.jieba import Jieba
 import glob, os
+import word2vec
+import numpy as np
 
+jieba = None
+UNK = '<UNK>'
 def cut(s):
-  return str(jieba.seg(s, pos=False))
-
-
-
-def generateSegmentation(files="data/raw/*.txt", save_in="data/seg"):
   global jieba
-  jieba = Jieba()
+  if jieba is None:
+    jieba = Jieba()
+  return sum([list(jieba.seg(_s, pos=False).raw) for _s in s.split()], [])
+
+def genSegment(files='data/raw/*.txt', save_in='data/seg'):
 
   if not os.path.exists(save_in):
-    print("Make directory "+save_in)
+    print('Make directory '+save_in)
     os.makedirs(save_in)
     
   files = list(glob.glob(files))
   print('Segmentalizing {} files ...'.format(len(files)))
   for path in files:
     with open(path) as f:
-      _s = f.read()
-      seged = " ".join([cut(s) for s in _s.split()])
+      seged = ' '.join(cut(f.read()))
     save_path = os.path.join(save_in, os.path.basename(path))
-    with open(save_path, "w") as f:
+    with open(save_path, 'w') as f:
       f.write(seged) 
-  print("Segmentalize finished")
+  print('Segmentalize finished')
 
-def generateWordEmbedding(files="data/seg/*.txt", save_as="data/word-vector.bin"):
-  import word2vec
-  corpus_path = "word2vec-corpus.tmp"
-  with open(corpus_path, "w") as corpus:
+def genWordEmbedding(files='data/seg/*.txt', save_as='data/word-vectors.txt'):
+  corpus_path = 'word2vec-corpus.tmp'
+  with open(corpus_path, 'w') as corpus:
     for path in glob.glob(files):
       with open(path) as f:
-        corpus.write(f.read()+"\n")
-  word2vec.word2vec(corpus_path, save_as, size=100, verbose=True)
+        corpus.write(f.read()+'\n')
+    corpus.write((" "+UNK)*10)
+  word2vec.word2vec(corpus_path, save_as, size=100, verbose=True, binary=0)
+  w2v = word2vec.load(save_as)
+  # set UNK's vector to mean of all vectors
+  w2v.vectors[w2v.vocab_hash[UNK]] = np.mean(w2v.vectors, axis=0)
+  with open(save_as, "w") as corpus: # w2v.save
+    corpus.write("%d %d\n" % (w2v.vectors.shape[0], w2v.vectors.shape[1]))
+    for i in range(w2v.vectors.shape[0]):
+      corpus.write(w2v.vocab[i]+" "+" ".join([str(v)[:9] for v in w2v.vectors[i]])+"\n")
   os.remove(corpus_path)
   
-if __name__=="__main__":
-  print("Will segmentalize/make word embedding for files in data/raw/*.txt")
-  generateSegmentation()
-  generateWordEmbedding()
-  print("Done")
+
+w2v = None
+def convert(lyrics, usingW2V="data/word-vectors.txt"):
+  global w2v
+  def word_id(word):
+    if t in w2v.vocab_hash:
+      return w2v.vocab_hash[t]
+    else:
+      return w2v.vocab_hash[UNK]
+  if w2v==None:
+    w2v = word2vec.load(usingW2V)
+  terms = cut(lyrics)
+  return [word_id(t) for t in terms]
+
+if __name__=='__main__':
+  print('Will segmentalize/make word embedding for files in data/raw/*.txt')
+  genSegment()
+  genWordEmbedding()
+  print('Done')
 
