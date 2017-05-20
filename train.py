@@ -93,6 +93,7 @@ if __name__ == '__main__':
   
   ae = model.Translator([me, md])
   tr = model.Translator([le, md])
+  """
   class Dataset(list):
     def shuffle(self):
       random.shuffle(self)
@@ -123,7 +124,13 @@ if __name__ == '__main__':
     else:
       AEtrainset.append((tar, tar))
       TRtrainset.append((inp, tar))
-
+  """
+  
+  aeDataset, trDataset = dataset.loadDataset(10)
+  
+  AEtrainset, AEvalset = aeDataset.split(0.2)
+  
+  TRtrainset, TRvalset = trDataset.split(0.2)
 
   args = config.autoencoder
   print(args)

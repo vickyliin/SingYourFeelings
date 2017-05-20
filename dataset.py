@@ -23,10 +23,10 @@ def vec2midi(vec):
 class Dataset:
   def __init__(self, inp, tar, batch_size, pad_value=0):
     '''
-inp, tar: dict of (lyrics, note, tempo)
-  lyrics: list, lyrics vector
-  note: list, note matrix of the music snippet
-  tempo: int, tempo of the music snippet
+    inp, tar: dict of (lyrics, note, tempo)
+      lyrics: list, lyrics vector
+      note: list, note matrix of the music snippet
+      tempo: int, tempo of the music snippet
     '''
     self.bs = batch_size
     self.inp = inp
@@ -102,8 +102,19 @@ inp, tar: dict of (lyrics, note, tempo)
       size = self.size,
       batch_size = self.bs,
     )}, default_flow_style=False)
+
+  def split(self, ratio=0.2):
+    n = int(self.size*(1-ratio))
+    def div(d, is_f):
+      r = {}
+      for k, v in d.items():
+        r[k] = v[:n] if is_f==0 else v[n:]
+      return r
+    d1, d2 = [Dataset(div(self.inp,i), div(self.tar,i), self.bs)
+        for i in [0, 1]]
+    return d1, d2
     
-def loadData(lyr_path="data/seg/*.txt", midi_path="data/csv/*.csv"):
+def loadData(n=0, lyr_path="data/seg/*.txt", midi_path="data/csv/*.csv"):
   import glob, os
   name = lambda x: os.path.splitext(os.path.basename(x))[0]
   lyr_path, midi_path = list(glob.glob(lyr_path)), list(glob.glob(midi_path))
@@ -112,10 +123,11 @@ def loadData(lyr_path="data/seg/*.txt", midi_path="data/csv/*.csv"):
   midi_path = list(filter(lambda n:name(n) in both, midi_path))
   lyr_path.sort( key=lambda f: os.path.basename(f))
   midi_path.sort(key=lambda f: os.path.basename(f))
-  for lyr, midi in zip(lyr_path, midi_path):
+  if n==0: n = len(lyr_path)
+  for lyr, midi in list(zip(lyr_path, midi_path))[:n]:
     yield lyr, midi
 
-if __name__ == '__main__':
+def loadDataset(n=0):
   from random import randrange
   from collections import defaultdict
   L = config.lyrics.L
@@ -124,9 +136,7 @@ if __name__ == '__main__':
   lyrics, note, tempo = [], [], []
 
   print("Loading training data ...")
-  for lyrics_path, midi_path in loadData():
-    print(lyrics_path)
-  
+  for lyrics_path, midi_path in loadData(n):
     lyr = l2v.convert(lyrics_path)
     for n, t in m2v.convert(midi_path):
       lyrics.append(lyr)
@@ -143,14 +153,18 @@ if __name__ == '__main__':
     def __eq__(self, other):
       return torch.equal(self.data, other.data)
 
-  dataset = Dataset(inp, tar, 2)
+  dataset_tr = Dataset(inp, tar, 2)
   lyr2note = defaultdict(list)
-  for k, v in zip(dataset.inp['lyrics'], dataset.tar['note']):
+  for k, v in zip(dataset_tr.inp['lyrics'], dataset_tr.tar['note']):
     lyr2note[tuple(k)].append(Note(v))
 
-  dataset.shuffle()
-  for i in range(dataset.size):
-    k = tuple(dataset.inp['lyrics'][i])
-    v = Note(dataset.tar['note'][i])
+  dataset_tr.shuffle()
+  for i in range(dataset_tr.size):
+    k = tuple(dataset_tr.inp['lyrics'][i])
+    v = Note(dataset_tr.tar['note'][i])
     assert v in lyr2note[k], '\nout: {}\ntar: {}'.format(v, lyr2note[k])
+
+  dataset_ae = Dataset(tar, tar, 2)
+
+  return dataset_ae, dataset_tr
 
