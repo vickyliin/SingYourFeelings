@@ -5,6 +5,7 @@ SEG_DIR = $(DATA_DIR)/seg
 WORD2VEC = $(DATA_DIR)/word-vectors.txt
 MIDICSV = midicsv
 PYTHON = python
+ICONV = iconv -f ISO-8859-1 -t utf-8 -o
 
 MIDI_FILES = $(wildcard $(RAW_DIR)/*.mid)
 TXT_FILES = $(wildcard $(RAW_DIR)/*.txt)
@@ -19,10 +20,9 @@ midi2csv: $(CSV_FILES)
 $(CSV_DIR) $(RAW_DIR) $(SEG_DIR):
 	mkdir -p $@
 
+TIMEOUT = timeout 9
 $(CSV_FILES): $(CSV_DIR)/%.csv : $(RAW_DIR)/%.mid | $(CSV_DIR)
-	-$(MIDICSV) "$<" "$@__"
-	iconv -f ISO-8859-1 -t utf-8 "$@__" > "$@" 
-	rm "$@__"
+	-$(TIMEOUT) $(MIDICSV) "$<" | $(ICONV) "$@"
 
 word2vec: $(WORD2VEC) 
 
