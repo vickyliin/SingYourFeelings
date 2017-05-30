@@ -8,7 +8,8 @@ from torch.autograd import Variable
 import torch.nn as nn
 import word2vec
 
-use_cuda = torch.cuda.is_available()
+use_cuda = False
+#use_cuda = torch.cuda.is_available()
 
 class param:
   def __init__(self, **args):
@@ -23,7 +24,7 @@ class param:
         for k, (t, v) in params.items():
           setattr(self, k, getattr(torch,t)(*v).cuda())
       else:
-        for k, v in params.items():
+        for k, (t, v) in params.items():
           setattr(self, k, getattr(torch,t)(*v))
 
     return __init__

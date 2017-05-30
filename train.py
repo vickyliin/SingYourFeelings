@@ -85,52 +85,16 @@ def train(model, trainset, valset, args):
 
 
 if __name__ == '__main__':
-  import random
-  vs = len(dataset.lex.vocab)
+  AEtrainset, TRtrainset = dataset.load('data/train.jsonl')
+  AEvalset, TRvalset = dataset.load('data/valid.jsonl')
+
+  vs = dataset.vs
   le = model.LyricsEncoder(vs)
   me = model.MusicEncoder()
   md = model.MusicDecoder()
   
   ae = model.Translator([me, md])
   tr = model.Translator([le, md])
-  """
-  class Dataset(list):
-    def shuffle(self):
-      random.shuffle(self)
-
-  AEtrainset = Dataset()
-  AEvalset = Dataset()
-
-  TRtrainset = Dataset()
-  TRvalset = Dataset()
-
-  # n: number of batch in an dataset
-  n = 20
-  bs = config.autoencoder.batch_size
-  for i in range(2*n):
-    nsize = (bs, *ae.note.size()[1:])
-    tsize = (bs,)
-    lsize = (bs, *tr.encoder.inp.size()[1:])
-
-    inp = torch.rand(*lsize)
-
-    note = torch.rand(*nsize)
-    tempo = torch.rand(*tsize)
-    tar = (note, tempo)
-
-    if i < n:
-      AEvalset.append((tar, tar))
-      TRvalset.append((inp, tar))
-    else:
-      AEtrainset.append((tar, tar))
-      TRtrainset.append((inp, tar))
-  """
-  
-  aeDataset, trDataset = dataset.loadDataset(10)
-  
-  AEtrainset, AEvalset = aeDataset.split(0.2)
-  
-  TRtrainset, TRvalset = trDataset.split(0.2)
 
   args = config.autoencoder
   print(args)

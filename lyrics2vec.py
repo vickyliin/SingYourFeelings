@@ -47,22 +47,23 @@ def genWordEmbedding(files='data/seg/*.txt', save_as='data/word-vectors.txt'):
   
 
 w2v = None
-def convert(lyrics, usingW2V="data/word-vectors.txt", is_file=True):
+def convert(lyrics, usingW2V="data/word-vectors.txt", is_file=False):
   """Convert lyrics to word id list.
   input:
     lyrics: input str or file name
   """
   global w2v
-  word_id = lambda t: w2v.vocab_hash[t] if t in w2v.vocab_hash else w2v.vocab_hash[UNK]
   if is_file: # file
     with open(lyrics) as f:
       lyrics = f.read()
     lyrics = lyrics.split()
   else:
     terms = cut(lyrics)
-  if w2v==None:
+  if w2v is None:
     w2v = word2vec.load(usingW2V)
-  return list(map(word_id, lyrics))
+
+  unk_id = w2v.vocab_hash[UNK]
+  return [w2v.vocab_hash.get(t, unk_id) for t in lyrics]
 
 if __name__=='__main__':
   print('Will segmentalize/make word embedding for files in data/raw/*.txt')

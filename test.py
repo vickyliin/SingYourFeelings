@@ -13,12 +13,10 @@ makedirs(OUT_PATH, exist_ok=True)
 '''
 {
   id: int,
-  raw: [lyrics (str), music path (str)],
+  name: song name (str),
   lyrics: lyrics sequence vector (list int),
-  music: {
-    note: note sequence matrix ( 3d list int),
-    tempo: tempo of different track (list int),
-  }
+  note: note sequence matrix ( 3d list int),
+  tempo: tempo (int),
 }
 '''
 translator = model.Translator()
@@ -27,24 +25,24 @@ filename  = 'model/%s.para' % MODEL
 sd = model.load(filename)
 translator.load_state_dict(sd)
 
-data = pd.read_json(DATA, lines = 1)
+data = pd.read_json(DATA, lines=True)
 
 
 fout = open('%s/%s.jsonl' % OUT_PATH, MODEL, 'w')
-for id, (inp, tar) in zip(data.id, data.raw):
+for id, name, inp in zip(data.id, data.name, data.lyrics):
   filename = '%s/%s-%s.midi' % (OUT_PATH, MODEL, id)
+  print('Name  : '+name)
+  print('Input : '+inp)
   print('Output: '+filename)
-  print('Target: '+tar)
-  print('Input : \n'+inp)
 
   out = translator.translate(inp)
   out.writeFile(filename)
   print('\n\n\n')
 
   print(json.dumps({
+    'name': name,
+    'input': inp,
     'output': filename,
-    'target': tar,
-    'input': inp
   }, ensure_ascii=False), file=fout)
 
 
