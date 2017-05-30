@@ -31,22 +31,28 @@ class Dataset:
     self.inp = inp
     self.tar = tar
 
-    for name, data in [('inp', inp), ('tar', tar)]:
+    for data in [self.inp, self.tar]:
       if 'lyrics' in data:
-        getattr(self, name)['lyrics'] = self.padLyrics(data, pad_value)
+        lyrics = self.padLyrics(data, pad_value)
+        data['lyrics'] = lyrics
         self.size = len(data['lyrics'])
       if 'note' in data:
-        getattr(self, name)['note'] = self.padNote(data)
+        note = self.padNote(data)
+        data['note'] = note
         self.size = len(data['note'])
 
   def padNote(self, data):
     def padNote(note):
-      E, L = config.music.E, config.music.L
+      Ci, E, L = config.music.Ci, config.music.E, config.music.L
+      if len(note) > Ci: note = note[:Ci]
       for track in note:
         if len(track) < L:
           yield track + [ [0]*E for _ in range(L-len(track)) ]
         else:
           yield track[:L]
+
+      for _ in range(len(note), Ci):
+        yield [ [0]*E for _ in range(L) ]
 
     return [ list(padNote(note)) for note in data['note'] ]
 
@@ -68,14 +74,14 @@ class Dataset:
     if end >= self.size:
       end = None
 
-    lyrics, note, tempo = None, None, None
-    pair = [(),()]
-    for ii, data in [(0,self.inp), (1,self.tar)]:
+    pair = [None, None]    # [inp, tar]
+    for n, data in [(0,self.inp), (1,self.tar)]:
       if 'lyrics' in data:
-        pair[ii] = torch.Tensor(data['lyrics'][begin:end])
+        pair[n] = torch.Tensor(data['lyrics'][begin:end])
       if 'note' in data:
-        pair[ii] += (torch.Tensor(data['note'][begin:end]),)
-        pair[ii] += (torch.Tensor(data['tempo'][begin:end]),)
+        note = torch.Tensor(data['note'][begin:end])
+        tempo = torch.Tensor(data['tempo'][begin:end])
+        pair[n] = (note, tempo)
 
     return tuple(pair)
 
