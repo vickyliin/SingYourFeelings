@@ -8,8 +8,8 @@ from torch.autograd import Variable
 import torch.nn as nn
 import word2vec
 
-use_cuda = False
-#use_cuda = torch.cuda.is_available()
+#use_cuda = False
+use_cuda = torch.cuda.is_available()
 
 class param:
   def __init__(self, **args):
@@ -45,12 +45,12 @@ class MusicEncoder(nn.Module):
   dp = config.music.dp
   assert L >= K, 'MusicEncoder: Seq length should >= kernel size'
   @param(
-    note = ['Tensor', (300, Ci, E, L)], 
+    note = ['Tensor', (300, Ci, L, E)], 
     tempo = ['Tensor', (300,)],
   )
   def __init__(self):
     super().__init__()
-    self.conv = nn.Conv2d(self.Ci, self.Co, (self.E, self.K))
+    self.conv = nn.Conv2d(self.Ci, self.Co, (self.K, self.E))
     self.pool = nn.MaxPool1d(self.L, ceil_mode=True)
     self.linear = nn.Linear(1+self.Co, self.M)
     self.dropout = nn.Dropout(self.dp, inplace=True)
@@ -68,7 +68,7 @@ class MusicEncoder(nn.Module):
     tempo = self.tempo.resize_(tempo.size()).copy_(tempo)
     tempo = Variable(tempo)
 
-    hid = self.conv(note).squeeze(2)              # N x Co x L-
+    hid = self.conv(note).squeeze(-1)             # N x Co x L-
     hid = self.pool(hid).squeeze(-1)              # N x Co
     self.dropout(hid)
 
@@ -97,7 +97,7 @@ class MusicDecoder(nn.Module):
 
   def forward(self, inp):
     # inp: torch tensor variable, N x M
-    # note: torch tensor variable, N x Ci x E x L
+    # note: torch tensor variable, N x Ci x L x E
     # tempo: torch tensor variable, N
     assert type(inp).__name__ == 'Variable'
 
@@ -110,6 +110,7 @@ class MusicDecoder(nn.Module):
 
     note = self.unconv(hid)                         # N x Ci*E x L
     note = note.view(-1, self.Ci, self.E, self.L)   # N x Ci x E x L
+    note = note.transpose(2, 3)                     # N x Ci x L x E
     self.dropout(note)
 
     tempo = self.activate(tempo)
@@ -168,8 +169,8 @@ def translateWrap(translator):
 class Translator(nn.Module):
   L, Ci, E = config.music.L, config.music.Ci, config.music.E
   @param(
-    note = ['Tensor', (300, Ci, E, L)], 
-    tempo = ['Tensor', (300, Ci)],
+    note = ['Tensor', (300, Ci, L, E)], 
+    tempo = ['Tensor', (300, )],
   )
   def __init__(self, init = None):
     # encoder: lyrics encoder / music encoder
