@@ -96,7 +96,7 @@ class Dataset:
       self.tar[k] = v
 
   def __len__(self):
-    return self.size//self.bs + 1
+    return (self.size+self.bs-1) // self.bs
 
   def __repr__(self):
     return yaml.dump({'Dataset': dict(
@@ -121,7 +121,7 @@ class Dataset:
     return d1, d2
   '''
     
-def loadPath(n=0, lyr_path="data/seg/*.txt", midi_path="data/csv/*.csv"):
+def loadPath(n=None, lyr_path="data/seg/*.txt", midi_path="data/csv/*.csv"):
   from glob import glob
   import os
   name = lambda x: os.path.splitext(os.path.basename(x))[0]
@@ -135,7 +135,7 @@ def loadPath(n=0, lyr_path="data/seg/*.txt", midi_path="data/csv/*.csv"):
   if n==0: n = len(lyr_path)
   '''
   names = set(map(name, glob(lyr_path))) & set(map(name, glob(midi_path)))
-  if n is not 0: names = list(names)[:n]
+  names = sorted(list(names))[:n]
   return [(id, name,
            lyr_path.replace('*', name),
            midi_path.replace('*', name)) for id, name in enumerate(names)]
@@ -162,14 +162,15 @@ def load(filename):
   inp = {'lyrics': data.lyrics.tolist()}
   tar = {'note': data.note.tolist(), 'tempo': data.tempo.tolist()}
 
-  dataset_tr = Dataset(inp, tar, 2)
-  dataset_ae = Dataset(tar, tar, 2)
+  dataset_tr = Dataset(inp, tar, config.translator.batch_size)
+  dataset_ae = Dataset(tar, tar, config.autoencoder.batch_size)
 
   return dataset_ae, dataset_tr
 
 def save(args):
   import json
   paths = loadPath()
+  random.seed(301)
   random.shuffle(paths)
   n = len(paths)
   split = args.split

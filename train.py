@@ -1,12 +1,12 @@
 #!/usr/bin/env python
+import torch
+from copy import deepcopy
+
+import config
 import model
 import dataset
 
-import torch
-import config
-from copy import deepcopy
-
-def batchLoss(model, dataset, criterion, train = True):
+def batchLoss(model, dataset, criterion, train=True):
   epoch_loss = [0, 0]
   loss = [0, 0]
   for batch in dataset:
@@ -35,17 +35,14 @@ def validate(model, valset, criterion):
 
 def earlyStop(fin):
   def train(model, trainset, valset, args):
-    printfmt = lambda i,endure: print(
-      '\rEpoch {:3} - Endure {:3}/{:3}'.format(i, endure, args.endure),
-      end = '')
+    fmt = '\rEpoch {:3} - Endure {:3}/{:3}'
+    def printfmt(i, endure): print(fmt.format(i, endure, args.endure), end='')
 
     trainer = fin(model, trainset, valset, args)
     printfmt(1, 0)
-    endure, min_loss = 0, next(trainer)
-    sd = deepcopy(model.state_dict())
-    printfmt(2, endure)
+    endure, min_loss = 0, float('inf')
     for i, loss in enumerate(trainer, 3):
-      printfmt(i, endure)
+      # printfmt(i, endure)
       if loss < min_loss:
         min_loss = loss
         endure = 0
@@ -78,6 +75,10 @@ def train(model, trainset, valset, args):
       loss[1].backward()
       optim.step()
       optim.zero_grad()
+      '''
+      print('Loss: {:.4f}, {:.4f}'.format(
+          loss[0].data[0], loss[1].data[0]), end='\r')
+      '''
 
     model.train(False)
     valloss = validate(model, valset, criterion)
