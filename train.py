@@ -26,7 +26,7 @@ def batchLoss(model, dataset, criterion, train=True):
   loss = (loss[0]*loss[1])**.5
 
   print(' - %s: ' % ['Validate', 'Train'][train], end='')
-  print('{:.4f}'.format(loss), end='')
+  print('{:.4f}'.format(loss))
   yield loss, True
 
 def validate(model, valset, criterion):
@@ -35,14 +35,13 @@ def validate(model, valset, criterion):
 
 def earlyStop(fin):
   def train(model, trainset, valset, args):
-    fmt = '\rEpoch {:3} - Endure {:3}/{:3}'
-    def printfmt(i, endure): print(fmt.format(i, endure, args.endure), end='')
+    fmt = 'Epoch {:3} - Endure {:3}/{:3}\n'
+    def printfmt(i, endure): print(fmt.format(i, endure, args.endure))
 
     trainer = fin(model, trainset, valset, args)
-    printfmt(1, 0)
     endure, min_loss = 0, float('inf')
-    for i, loss in enumerate(trainer, 3):
-      # printfmt(i, endure)
+    for i, loss in enumerate(trainer, 1):
+      printfmt(i, endure)
       if loss < min_loss:
         min_loss = loss
         endure = 0
@@ -95,6 +94,7 @@ if __name__ == '__main__':
   md = model.MusicDecoder()
   
   ae = model.Translator([me, md])
+  #ae = model.NullModel()
   tr = model.Translator([le, md])
 
   args = config.autoencoder
