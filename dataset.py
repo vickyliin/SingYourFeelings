@@ -47,12 +47,12 @@ class Dataset:
       if len(note) > Ci: note = note[:Ci]
       for track in note:
         if len(track) < L:
-          yield track + [ [0]*E for _ in range(L-len(track)) ]
+          yield track + [ 0 for _ in range(L-len(track)) ]
         else:
           yield track[:L]
 
       for _ in range(len(note), Ci):
-        yield [ [0]*E for _ in range(L) ]
+        yield [0 for _ in range(L) ]
 
     return [ list(padNote(note)) for note in data['note'] ]
 

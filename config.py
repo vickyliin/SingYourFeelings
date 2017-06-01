@@ -16,7 +16,7 @@ class autoencoder(metaclass=Args):
   batch_size = 30
   max_epoch = 10000
   endure = 20
-  loss = 'MSELoss'
+  loss = 'CrossEntropyLoss'
 
 class translator(metaclass=Args):
   name = 'test'
@@ -27,7 +27,7 @@ class translator(metaclass=Args):
   batch_size = 30
   max_epoch = 10000
   endure = 30
-  loss = 'MSELoss'
+  loss = 'CrossEntropyLoss'
 
 class music(metaclass=Args):
   '''
@@ -51,11 +51,18 @@ class music(metaclass=Args):
   T = 1000
 
 class note(metaclass=Args):
+  '''
+  dim: embedding dimension
+  size: number of embeddings
+  '''
+  from functools import reduce
   pitch = list(range(25,80))+[90]
   time = [0, 30, 48, 60, 96, 10000]
   duration = [0, 16, 30, 48, 60, 120, 3000]
   volumn = [0, 85, 150]
   divs = [pitch, time, duration, volumn]
+  dim = 100
+  size = reduce(lambda x,y: x*y, map(len, divs))
 
 
 class lyrics(metaclass=Args):
