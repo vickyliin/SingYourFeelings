@@ -90,8 +90,8 @@ if __name__ == '__main__':
 
   vs = dataset.vs
   le = model.LyricsEncoder(vs)
-  me = model.MusicEncoder()
-  md = model.MusicDecoder()
+  me = model.MusicEmbEncoder()
+  md = model.MusicEmbDecoder()
   
   ae = model.Translator([me, md])
   #ae = model.NullModel()
