@@ -70,13 +70,13 @@ class MusicEncoder(nn.Module):
 
     hid = self.conv(note).squeeze(-1)             # N x Co x L-
     hid = self.pool(hid).squeeze(-1)              # N x Co
-    self.dropout(hid)
+    #self.dropout(hid)
 
     hid = torch.cat([tempo.view(-1,1), hid], 1)   # N x 1+Co
 
     out = self.linear(hid)                        # N x M
-    self.dropout(out)
-    self.activate(out)
+    #self.dropout(out)
+    #self.activate(out)
 
     return out
 
@@ -155,7 +155,7 @@ class MusicDecoder(nn.Module):
     note = self.unconv(hid)                         # N x Ci*E x L
     note = note.view(-1, self.Ci, self.E, self.L)   # N x Ci x E x L
     note = note.transpose(2, 3)                     # N x Ci x L x E
-    self.dropout(note)
+    #self.dropout(note)
 
     tempo = self.activate(tempo)
     note = self.activate(note)
@@ -238,7 +238,7 @@ class LyricsEncoder(nn.Module):
 
     out = self.linear(hid)                        # N x M
     self.dropout(out)
-    out = self.activate(out)
+    #out = self.activate(out)
 
     return out
 
@@ -282,6 +282,55 @@ class Translator(nn.Module):
     self.note.resize_(note.size()).copy_(note)
     self.tempo.resize_(tempo.size()).copy_(tempo)
     return Variable(self.note), Variable(self.tempo)
+
+'''
+class BaseMusicEncoder(nn.Module):
+  L, Ci, E = config.music.L, config.music.Ci, config.music.E
+  M = config.M
+class BaseMusicDecoder(nn.Module):
+'''
+
+class NullModel(nn.Module):
+  L, Ci, E = config.music.L, config.music.Ci, config.music.E
+  M = config.M
+  @param(
+    note = ['Tensor', (300, Ci, L, E)], 
+    tempo = ['Tensor', (300, )],
+  )
+  def __init__(self):
+    super().__init__()
+    n = self.L*self.Ci*self.E
+    self.linearQAQ1 = nn.Linear(n, self.M)
+    self.linearQAQ2 = nn.Linear(self.M, n)
+    self.linear2 = nn.Linear(1, 1)
+    self.activate = nn.Sigmoid()
+    self.n = n
+
+  def wrapTar(self, tar):
+    note, tempo = tar
+    self.note.resize_(note.size()).copy_(note)
+    self.tempo.resize_(tempo.size()).copy_(tempo)
+    return Variable(self.note), Variable(self.tempo)
+
+  def forward(self, inp):
+    note, tempo = inp
+    # note: torch tensor, N x Ci x E x L
+    # tempo: torch tensor, N
+    # out: torch tensor variable, N x M
+    assert type(note).__name__.endswith('Tensor')
+    note = self.note.resize_(note.size()).copy_(note)
+    note = Variable(note)
+    assert type(tempo).__name__.endswith('Tensor')
+    tempo = self.tempo.resize_(tempo.size()).copy_(tempo)
+    tempo = Variable(tempo)
+
+    out = self.linearQAQ1(note.view(-1, self.n))
+    out = self.linearQAQ2(out)
+    out = out.view(-1, self.Ci, self.L, self.E)
+    out = self.activate(out)
+
+    tempo = self.linear2(tempo.unsqueeze(-1))
+    return out, tempo
 
 if __name__ == '__main__':
   vsL, vsM = len(dataset.lex.vocab), 5
