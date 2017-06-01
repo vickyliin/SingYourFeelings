@@ -50,6 +50,14 @@ class music(metaclass=Args):
   dp = 0.5
   T = 1000
 
+class note(metaclass=Args):
+  pitch = list(range(25,80))+[90]
+  time = [0, 30, 48, 60, 96, 10000]
+  duration = [0, 16, 30, 48, 60, 120, 3000]
+  volumn = [0, 85, 150]
+  divs = [pitch, time, duration, volumn]
+
+
 class lyrics(metaclass=Args):
   '''
     L: max lyrics length

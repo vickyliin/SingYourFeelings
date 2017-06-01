@@ -167,6 +167,7 @@ def load(filename):
 
   return dataset_ae, dataset_tr
 
+
 def save(args):
   import json
   paths = loadPath()

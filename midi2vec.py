@@ -3,6 +3,27 @@ import config
 from collections import defaultdict
 import csv
 
+def noteEmb(snippet):
+  return [note2Id(note) for note in snippet if note2Id(note) is not None]
+def note2Id(note):
+  from bisect import bisect_left as bs
+  if note[2]==0: # duration=0
+    return None
+  divs = config.note.divs
+  idxs = [ min(bs(d, n), len(d)-1) for n, d in zip(note, divs) ]
+  idx, base = 0, 1
+  for i, d in zip(idxs, divs):
+    idx += i*base
+    base *= len(d)
+  return idx
+def id2Note(idx):
+  divs = config.note.divs
+  note = []
+  for d in divs:
+    note.append(d[idx%len(d)])
+    idx //= len(d)
+  return note
+
 def chunk(fin):
   def chunk(note, tempo):
     snippets = defaultdict(list)
@@ -13,6 +34,7 @@ def chunk(fin):
     for time, snippet in snippets.items():
       while time > tempo[i][0] and i < len(tempo)-1:
         i += 1
+      snippet = list(map(noteEmb, snippet))
       yield snippet, tempo[i-1][1]
 
   def convert(filename):
