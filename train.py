@@ -14,7 +14,7 @@ def batchLoss(model, dataset, criterion, train=True):
     tar = model.wrapTar(tar)
     out = model(inp)
 
-    loss[0] = criterion[0](out[0].view(-1,config.note.size), tar[0].view(-1))
+    loss[0] = criterion[0](out[0], tar[0])
     loss[1] = criterion[1](out[1], tar[1])
     if train:
       yield loss, False
@@ -22,12 +22,14 @@ def batchLoss(model, dataset, criterion, train=True):
     epoch_loss[0] += loss[0].data[0]
     epoch_loss[1] += loss[1].data[0]
 
-  loss = [ (loss/len(dataset))**.5 for loss in epoch_loss ]
+  loss = [ (loss/len(dataset)) for loss in epoch_loss ]
+  loss[1] = loss[1]**0.5
+
 
   _loss = (loss[0]*loss[1])**.5
 
   print(' - %s: ' % ['Validate', 'Train'][train], end='')
-  print('{:.4f} {:.4f} : {:.4f}'.format(loss[0], loss[1], _loss), end='')
+  print('({:.4f}, {:.4f}) : {:.4f}  '.format(loss[0], loss[1], _loss), end='')
   yield _loss, True
 
 def validate(model, valset, criterion):

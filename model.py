@@ -196,6 +196,7 @@ class MusicEmbDecoder(nn.Module):
     note = note.view(-1, self.Ci, self.Emb, self.L)   # N x Ci x Emb x L
     note = note.transpose(2, 3).contiguous()          # N x Ci x L x Emb
     note = self.unemb(note.view(-1,self.Emb)).view(-1, self.Ci, self.L, self.Siz)
+    note = note.view(-1,config.note.size)
     self.dropout(note)
 
     tempo = self.activate(tempo)
@@ -281,7 +282,7 @@ class Translator(nn.Module):
     note, tempo = tar
     self.note.resize_(note.size()).copy_(note)
     self.tempo.resize_(tempo.size()).copy_(tempo)
-    return Variable(self.note), Variable(self.tempo)
+    return Variable(self.note).view(-1), Variable(self.tempo)
 
 '''
 class BaseMusicEncoder(nn.Module):
