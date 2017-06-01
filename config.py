@@ -16,7 +16,8 @@ class autoencoder(metaclass=Args):
   batch_size = 30
   max_epoch = 10000
   endure = 20
-  loss = 'CrossEntropyLoss'
+  loss_cate = 'CrossEntropyLoss'
+  loss_val = 'MSELoss'
 
 class translator(metaclass=Args):
   name = 'test'
@@ -27,7 +28,8 @@ class translator(metaclass=Args):
   batch_size = 30
   max_epoch = 10000
   endure = 30
-  loss = 'CrossEntropyLoss'
+  loss_cate = 'CrossEntropyLoss'
+  loss_val = 'MSELoss'
 
 class music(metaclass=Args):
   '''

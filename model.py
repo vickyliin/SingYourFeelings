@@ -87,7 +87,7 @@ class MusicEmbEncoder(nn.Module):
   dp = config.music.dp
   assert L >= K, 'MusicEncoder: Seq length should >= kernel size'
   @param(
-    note = ['Tensor', (300, Ci, L)], 
+    note = ['LongTensor', (300, Ci, L)], 
     tempo = ['Tensor', (300,)],
   )
   def __init__(self):
@@ -111,11 +111,7 @@ class MusicEmbEncoder(nn.Module):
     tempo = self.tempo.resize_(tempo.size()).copy_(tempo)
     tempo = Variable(tempo)
 
-    print(note)
-    print(note.view(-1,self.Ci*self.L))
-    print(self.emb(note.view(-1,self.Ci*self.L)))
-
-    note = self.emb(note.view(-1,self.Ci*self.L)).view(-1, self.Ci, self.L)
+    note = self.emb(note.view(-1,self.Ci*self.L)).view(-1, self.Ci, self.L, self.Emb) # N x Ci x L x Emb
     hid = self.conv(note).squeeze(-1)             # N x Co x L-
     hid = self.pool(hid).squeeze(-1)              # N x Co
     self.dropout(hid)
@@ -179,6 +175,7 @@ class MusicEmbDecoder(nn.Module):
     self.linear = nn.Linear(self.M, 1+self.Co)
     self.unpool = nn.Linear(1, self.L+self.K-1)
     self.unconv = nn.Conv1d(self.Co, self.Ci*self.Emb, self.K)
+    self.unemb = nn.Linear(self.Emb, self.Siz)
     self.dropout = nn.Dropout(self.dp, inplace=True)
     self.activate = nn.ReLU()
 
@@ -195,9 +192,10 @@ class MusicEmbDecoder(nn.Module):
     hid = hid.view(-1, self.Co, self.L+self.K-1)  # N x Co x L+K-1
     hid = self.activate(hid)
 
-    note = self.unconv(hid)                         # N x Ci*E x L
-    note = note.view(-1, self.Ci, self.E, self.L)   # N x Ci x E x L
-    note = note.transpose(2, 3)                     # N x Ci x L x E
+    note = self.unconv(hid)                           # N x Ci*E x L
+    note = note.view(-1, self.Ci, self.Emb, self.L)   # N x Ci x Emb x L
+    note = note.transpose(2, 3).contiguous()          # N x Ci x L x Emb
+    note = self.unemb(note.view(-1,self.Emb)).view(-1, self.Ci, self.L, self.Siz)
     self.dropout(note)
 
     tempo = self.activate(tempo)
@@ -256,7 +254,7 @@ def translateWrap(translator):
 class Translator(nn.Module):
   L, Ci, E = config.music.L, config.music.Ci, config.music.E
   @param(
-    note = ['Tensor', (300, Ci, L, E)], 
+    note = ['LongTensor', (300, Ci, L)], 
     tempo = ['Tensor', (300, )],
   )
   def __init__(self, init = None):
