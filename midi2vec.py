@@ -35,7 +35,7 @@ def chunk(fin):
       while time > tempo[i][0] and i < len(tempo)-1:
         i += 1
       snippet = list(map(noteEmb, snippet))
-      yield snippet, tempo[i-1][1]
+      yield snippet, tempo[i-1][1]/config.tempo.scaler
 
   def convert(filename):
     '''Convert a midi-csv file to music snippets.

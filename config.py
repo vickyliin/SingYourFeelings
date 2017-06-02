@@ -66,6 +66,9 @@ class note(metaclass=Args):
   dim = 100
   size = reduce(lambda x,y: x*y, map(len, divs))
 
+class tempo(metaclass=Args):
+  scaler = 500000
+
 
 class lyrics(metaclass=Args):
   '''
