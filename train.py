@@ -16,10 +16,6 @@ def batchLoss(model, dataset, criterion, train=True):
     inp, tar = batch
     tar = model.wrapTar(tar)
     out = model(inp)
-    print("target")
-    print(cpu(tar[0])[:8])
-    print("trained proba")
-    print(cpu(out[0])[np.arange(8), cpu(tar[0])[:8]])
     cuda(out[0])
     cuda(tar[0])
     

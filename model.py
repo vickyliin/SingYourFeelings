@@ -197,7 +197,6 @@ class MusicEmbDecoder(nn.Module):
     hid = self.QAQ(inp)                        # N x 1+Co
     tempo, note = hid[:,0], hid[:,1:]              # N x Co
     note = note.contiguous()
-    note = self.soft(note.view(-1, self.Siz))
     note = note.view(-1, self.Siz)
 
     return note, tempo
