@@ -33,7 +33,7 @@ class translator(metaclass=Args):
 
 class music(metaclass=Args):
   '''
-    T: time period of a music sneppet
+    T: time period of a music sneppet (in beat)
     L: max music length 
     Ci: music track number
     E: note feature number
@@ -45,37 +45,33 @@ class music(metaclass=Args):
   feat2id = {'pitch':0, 'time':1, 'duration':2, 'volume':3}
   id2feat = { v: k for k, v in feat2id.items() }
   L = 10 #300
-  Ci = 2 #5
+  Ci = 100 #5
   E = len(feat2id)
   K = 3 #10
   Co = 1000
   dp = 0.25
-  T = 1000
+  T = 30
 
 class note(metaclass=Args):
   '''
   dim: embedding dimension
   size: number of embeddings
   '''
-  from functools import reduce
-  pitch = list(range(25,80))+[90]
-  time = [0, 30, 48, 60, 96, 10000]
-  duration = [0, 16, 30, 48, 60, 120, 3000]
-  volumn = [0, 85, 150]
+  from itertools import product
+  pitch = list(range(25,100))
+  duration = [1/4, 1/3, 1/2, 1, 1.5, 2, 3, 4]
+  time = [0] + duration + [6, 8, 10, 12, 16]
+  volume = [85, 150]
 
-  '''
-  pitch = [1, 2]
-  time = [3, 4]
-  duration = [5, 6]
-  volumn = [1]
-  '''
-
-  divs = [pitch, time, duration, volumn]
+  divs = [pitch, time, duration, volume]
+  note2id = {k: i for i, k in enumerate(product(*divs), 1)}
+  note2id[0,0,0,0] = 0
+  id2note = {v: k for k, v in note2id.items()}
+  size = len(note2id)
   dim = 30
-  size = reduce(lambda x,y: x*y, map(len, divs))
 
 class tempo(metaclass=Args):
-  dafault = 500000
+  default = 500000 # mus/beat
 
 
 class lyrics(metaclass=Args):

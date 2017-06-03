@@ -24,16 +24,18 @@ def vec2midi(vec):
   notes, tempo = vec
 
   midi = MIDIFile(config.music.Ci)
-  midi.addTempo(0, 0, tempo*config.tempo.default)
+  tempo *= config.tempo.default # mus/beat
+  tempo = int(1/tempo * 1e6 * 60)    # beat/minute (BPM)
+  midi.addTempo(0, 0, tempo)
 
   feat2id = config.music.feat2id.items()
-  for channel, channel_notes in enumerate(notes):
+  for track, track_notes in enumerate(notes):
     time = 0
-    for note_emb in channel_notes:
-      note = m2v.id2Note(note_emb)
+    for note_emb in track_notes:
+      note = config.note.id2note[note_emb]
       note = {feat: note[id] for feat, id in feat2id}
       note['time'] = time = note['time'] + time
-      midi.addNote(track=channel, channel=channel, **note)
+      midi.addNote(track=track, channel=0, **note)
   return midi
 
 class Dataset:
@@ -187,7 +189,7 @@ def load(filename):
 
 def save(args):
   import json
-  paths = loadPath()
+  paths = loadPath(args.n)
   random.seed(301)
   random.shuffle(paths)
   n = len(paths)
@@ -210,12 +212,16 @@ def save(args):
 
 if __name__ == '__main__':
   import argparse
+  import time
   ap = argparse.ArgumentParser()
   ap.add_argument('-train', '-t', 
       type=argparse.FileType('w'), default='data/train.jsonl')
   ap.add_argument('-valid', '-v', 
       type=argparse.FileType('w'), default='data/valid.jsonl')
   ap.add_argument('-split', '-s', type=int, default=4)
+  ap.add_argument('-n', '-number', type=int)
+  start = time.time()
   args = ap.parse_args()
   save(args)
+  print('\nTime:', time.time()-start, 's')
 
