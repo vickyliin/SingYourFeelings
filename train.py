@@ -5,14 +5,24 @@ from copy import deepcopy
 import config
 import model
 import dataset
+import numpy as np
 
 def batchLoss(model, dataset, criterion, train=True):
+  def cpu(ten): return ten.data.cpu().numpy()
+  def cuda(ten): return ten.cuda()
   epoch_loss = [0, 0]
   loss = [0, 0]
   for batch in dataset:
     inp, tar = batch
     tar = model.wrapTar(tar)
     out = model(inp)
+    print("target")
+    print(cpu(tar[0])[:8])
+    print("trained proba")
+    print(cpu(out[0])[np.arange(8), cpu(tar[0])[:8]])
+    cuda(out[0])
+    cuda(tar[0])
+    
 
     loss[0] = criterion[0](out[0], tar[0])
     loss[1] = criterion[1](out[1], tar[1])
@@ -104,6 +114,7 @@ if __name__ == '__main__':
   print(args)
   print(ae)
   train(ae, AEtrainset, AEvalset, args = args)
+  input()
 
 
   args = config.translator

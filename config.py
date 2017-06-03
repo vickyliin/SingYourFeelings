@@ -11,7 +11,7 @@ class Args(type):
 class autoencoder(metaclass=Args):
   optim = 'Adam'
   optim_args = dict(
-    lr = 3e-3
+    lr = 3e-2
   )
   batch_size = 30
   max_epoch = 10000
@@ -44,7 +44,7 @@ class music(metaclass=Args):
  
   feat2id = {'pitch':0, 'time':1, 'duration':2, 'volume':3}
   id2feat = { v: k for k, v in feat2id.items() }
-  L = 4 #300
+  L = 2 #300
   Ci = 2 #5
   E = len(feat2id)
   K = 2 #10
@@ -62,8 +62,16 @@ class note(metaclass=Args):
   time = [0, 30, 48, 60, 96, 10000]
   duration = [0, 16, 30, 48, 60, 120, 3000]
   volumn = [0, 85, 150]
+
+  '''
+  pitch = [1, 2]
+  time = [3, 4]
+  duration = [5, 6]
+  volumn = [1]
+  '''
+
   divs = [pitch, time, duration, volumn]
-  dim = 100
+  dim = 30
   size = reduce(lambda x,y: x*y, map(len, divs))
 
 class tempo(metaclass=Args):
@@ -87,6 +95,6 @@ class lyrics(metaclass=Args):
   lex = 'data/word-vectors.txt'
 
 # encoded vector size
-M = 6 #100
+M = 100 #100
 
 
