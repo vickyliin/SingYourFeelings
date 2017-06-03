@@ -48,8 +48,8 @@ class music(metaclass=Args):
   Ci = 2 #5
   E = len(feat2id)
   K = 3 #10
-  Co = 200
-  dp = 0.5
+  Co = 1000
+  dp = 0.25
   T = 1000
 
 class note(metaclass=Args):
