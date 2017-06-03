@@ -62,14 +62,6 @@ class note(metaclass=Args):
   time = [0, 30, 48, 60, 96, 10000]
   duration = [0, 16, 30, 48, 60, 120, 3000]
   volumn = [0, 85, 150]
-
-  '''
-  pitch = [1, 2]
-  time = [3, 4]
-  duration = [5, 6]
-  volumn = [1]
-  '''
-
   divs = [pitch, time, duration, volumn]
   dim = 30
   size = reduce(lambda x,y: x*y, map(len, divs))

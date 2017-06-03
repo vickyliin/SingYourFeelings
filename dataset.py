@@ -75,7 +75,7 @@ class Dataset:
 
   def padLyrics(self, data, pv):
     def padLyrics(lyr):
-      L = config.music.L
+      L = config.lyrics.L
       if len(lyr) < L:
         return lyr + [pv]*( L-len(lyr) )
       else:
