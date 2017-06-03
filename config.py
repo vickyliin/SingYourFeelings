@@ -75,7 +75,7 @@ class note(metaclass=Args):
   size = reduce(lambda x,y: x*y, map(len, divs))
 
 class tempo(metaclass=Args):
-  scaler = 500000
+  dafault = 500000
 
 
 class lyrics(metaclass=Args):

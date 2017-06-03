@@ -16,7 +16,24 @@ lex = w2v.load(config.lyrics.lex)
 vs = len(lex.vocab)
 
 def vec2midi(vec):
+  '''
+  vec: (note, tempo)
+    note: list, Ci x L
+    tempo: float
+  '''
+  notes, tempo = vec
+
   midi = MIDIFile(config.music.Ci)
+  midi.addTempo(0, 0, tempo*config.tempo.default)
+
+  feat2id = config.music.feat2id.items()
+  for channel, channel_notes in enumerate(notes):
+    time = 0
+    for note_emb in channel_notes:
+      note = m2v.id2Note(note_emb)
+      note = {feat: note[id] for feat, id in feat2id}
+      note['time'] = time = note['time'] + time
+      midi.addNote(track=channel, channel=channel, **note)
   return midi
 
 class Dataset:

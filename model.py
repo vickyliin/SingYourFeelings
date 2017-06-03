@@ -102,7 +102,7 @@ class MusicEmbEncoder(nn.Module):
 
   def forward(self, inp):
     note, tempo = inp
-    # note: torch tensor, N x Ci x E x L
+    # note: torch tensor, N x Ci x L
     # tempo: torch tensor, N
     # out: torch tensor variable, N x M
     assert type(note).__name__.endswith('Tensor')
