@@ -68,6 +68,7 @@ class note(metaclass=Args):
   note2id[0,0,0,0] = 0
   id2note = {v: k for k, v in note2id.items()}
   size = len(note2id)
+
   dim = 30
 
 class tempo(metaclass=Args):
