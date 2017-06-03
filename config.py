@@ -11,7 +11,7 @@ class Args(type):
 class autoencoder(metaclass=Args):
   optim = 'Adam'
   optim_args = dict(
-    lr = 3e-2
+    lr = 3e-3
   )
   batch_size = 30
   max_epoch = 10000
