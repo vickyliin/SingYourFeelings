@@ -44,10 +44,10 @@ class music(metaclass=Args):
  
   feat2id = {'pitch':0, 'time':1, 'duration':2, 'volume':3}
   id2feat = { v: k for k, v in feat2id.items() }
-  L = 2 #300
+  L = 10 #300
   Ci = 2 #5
   E = len(feat2id)
-  K = 2 #10
+  K = 3 #10
   Co = 200
   dp = 0.5
   T = 1000
@@ -95,6 +95,6 @@ class lyrics(metaclass=Args):
   lex = 'data/word-vectors.txt'
 
 # encoded vector size
-M = 100 #100
+M = 200 #100
 
 

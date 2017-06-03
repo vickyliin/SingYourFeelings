@@ -28,14 +28,20 @@ def batchLoss(model, dataset, criterion, train=True):
     epoch_loss[0] += loss[0].data[0]
     epoch_loss[1] += loss[1].data[0]
 
+  acc = np.sum(np.argmax(cpu(out[0]), 1)==cpu(tar[0]))
+  acc = acc/len(cpu(tar[0]))
+  cuda(out[0])
+  cuda(tar[0])
+
+
   loss = [ (loss/len(dataset)) for loss in epoch_loss ]
   loss[1] = loss[1]**0.5
 
 
   _loss = (loss[0]*loss[1])**.5
 
-  print(' - %s: ' % ['Validate', 'Train'][train], end='')
-  print('({:.4f}, {:.4f}) : {:.4f}  '.format(loss[0], loss[1], _loss), end='')
+  print('%s: ' % ['Validate', 'Train'][train], end='')
+  print('({:.4f}, {:.4f}) : {:.4f}, acc: {:.4f} - '.format(loss[0], loss[1], _loss, acc), end='')
   yield _loss, True
 
 def validate(model, valset, criterion):

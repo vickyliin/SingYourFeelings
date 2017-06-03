@@ -115,6 +115,7 @@ class MusicEmbEncoder(nn.Module):
     note = self.emb(note.view(-1,self.Ci*self.L)).view(-1, self.Ci, self.L, self.Emb) # N x Ci x L x Emb
     hid = torch.cat([tempo.view(-1,1), note.view(-1,self.Ci*self.L*self.Emb)], 1)
     out = self.QAQ(hid)
+    out = self.activate(out)
 
     return out
 
@@ -194,12 +195,15 @@ class MusicEmbDecoder(nn.Module):
     # tempo: torch tensor variable, N
     assert type(inp).__name__ == 'Variable'
 
+    '''
+    # Linear
     hid = self.QAQ(inp)                        # N x 1+Co
     tempo, note = hid[:,0], hid[:,1:]              # N x Co
     note = note.contiguous()
     note = note.view(-1, self.Siz)
 
     return note, tempo
+    '''
 
     hid = self.linear(inp)                        # N x 1+Co
     tempo, hid = hid[:,0], hid[:,1:]              # N x Co
@@ -209,14 +213,15 @@ class MusicEmbDecoder(nn.Module):
     hid = self.activate(hid)
 
     note = self.unconv(hid)                           # N x Ci*E x L
+    self.dropout(note)
     note = note.view(-1, self.Ci, self.Emb, self.L)   # N x Ci x Emb x L
     note = note.transpose(2, 3).contiguous()          # N x Ci x L x Emb
     note = self.unemb(note.view(-1,self.Emb)).view(-1, self.Ci, self.L, self.Siz)
-    note = note.view(-1,config.note.size)
+    note = note.view(-1,self.Siz)
     self.dropout(note)
 
-    tempo = self.activate(tempo)
-    note = self.activate(note)
+    # tempo = self.activate(tempo)
+    # note = self.activate(note)
 
 
     return note, tempo
