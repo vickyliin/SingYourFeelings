@@ -31,10 +31,11 @@ def vec2midi(vec):
   feat2id = config.music.feat2id.items()
   time = 0
   for note_emb in notes:
-    note = config.note.id2note[note_emb]
-    note = {feat: note[id] for feat, id in feat2id}
-    note['time'] = time = note['time'] + time
-    midi.addNote(track=0, channel=0, **note)
+    if note_emb:
+      note = config.note.id2note[note_emb]
+      note = {feat: note[id] for feat, id in feat2id}
+      note['time'] = time = note['time'] + time
+      midi.addNote(track=0, channel=0, **note)
   return midi
 
 class Dataset:

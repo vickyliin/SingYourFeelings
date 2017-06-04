@@ -79,7 +79,7 @@ python3 test.py
 
 The output midi files and input descriptions will be stored in the `output/` directory.
 
-### Modification
+## Modification
 
 The arguments are stored in `config.py`. One can find detailed descriptions about the arguments in it.
 
