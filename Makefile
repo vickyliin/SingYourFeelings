@@ -11,6 +11,9 @@ MIDI_FILES = $(wildcard $(RAW_DIR)/*.mid)
 TXT_FILES = $(wildcard $(RAW_DIR)/*.txt)
 CSV_FILES = $(MIDI_FILES:$(RAW_DIR)/%.mid=$(CSV_DIR)/%.csv)
 
+DATASET = $(DATA_DIR)/train.jsonl $(DATA_DIR)/valid.jsonl
+
+all: dataset
 
 crawl: | $(RAW_DIR)
 	$(PYTHON) crawler/midi_download.py $(RAW_DIR)
@@ -30,6 +33,10 @@ $(WORD2VEC): $(TXT_FILES)
 	$(PYTHON) lyrics2vec.py
 	
 
+dataset: $(DATASET)
+
+$(DATASET): $(WORD2VEC)
+	$(PYTHON) dataset.py
 
 RM = rm -d
 clean:

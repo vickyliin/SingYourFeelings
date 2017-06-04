@@ -20,6 +20,7 @@
     - {model name}-{id}.mid
  
 - crawler/
+- demo/
 - gui/
     - index.html
     - ...
@@ -59,6 +60,8 @@ make install INSTALL_DEST=path_to_install
 ```bash
 make
 ```
+
+The dataset will be saved in `data/train.jsonl` and `data/valid.jsonl`.
     
 ### Train Model
 
@@ -75,3 +78,11 @@ python3 test.py
 ```
 
 The output midi files and input descriptions will be stored in the `output/` directory.
+
+### Modification
+
+The arguments are stored in `config.py`. One can find detailed descriptions about the arguments in it.
+
+Other usage of the system can be found in the `demo/` directory.
+
+
