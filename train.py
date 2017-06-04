@@ -8,16 +8,20 @@ import dataset
 import numpy as np
 
 def batchLoss(model, dataset, criterion, train=True):
+  '''
   def cpu(ten): return ten.data.cpu().numpy()
   def cuda(ten): return ten.cuda()
+  '''
   epoch_loss = [0, 0]
   loss = [0, 0]
   for batch in dataset:
     inp, tar = batch
     tar = model.wrapTar(tar)
     out = model(inp)
+    '''
     cuda(out[0])
     cuda(tar[0])
+    '''
     
 
     loss[0] = criterion[0](out[0], tar[0])
@@ -28,10 +32,18 @@ def batchLoss(model, dataset, criterion, train=True):
     epoch_loss[0] += loss[0].data[0]
     epoch_loss[1] += loss[1].data[0]
 
+  '''
   acc = np.sum(np.argmax(cpu(out[0]), 1)==cpu(tar[0]))
   acc = acc/len(cpu(tar[0]))
+  '''
+  _, out_idx = out[0].max(1)
+  acc = (out_idx == tar[0]).sum()
+  acc = acc.data[0]
+  acc /= tar[0].size(0)
+  '''
   cuda(out[0])
   cuda(tar[0])
+  '''
 
 
   loss = [ (loss/len(dataset)) for loss in epoch_loss ]
