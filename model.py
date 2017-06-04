@@ -39,28 +39,28 @@ def load(filename):
   return sd
 
 class MusicEncoder(nn.Module):
-  L, Ci, K, Co, M = \
-    config.music.L, config.music.Ci, config.music.K, config.music.Co, config.M
+  L, K, Co, M = \
+    config.music.L, config.music.K, config.music.Co, config.M
   Emb, Siz = config.note.dim, config.note.size
   dp = config.music.dp
   assert L >= K, 'MusicEncoder: Seq length should >= kernel size'
   @param(
-    note = ['LongTensor', (300, Ci, L)], 
+    note = ['LongTensor', (300, L)], 
     tempo = ['Tensor', (300,)],
   )
   def __init__(self):
     super().__init__()
     self.emb = nn.Embedding(self.Siz, self.Emb)
-    self.conv = nn.Conv2d(self.Ci, self.Co, (self.K, self.Emb))
+    self.conv = nn.Conv2d(1, self.Co, (self.K, self.Emb))
     self.pool = nn.MaxPool1d(self.L, ceil_mode=True)
     self.linear = nn.Linear(1+self.Co, self.M)
     self.dropout = nn.Dropout(self.dp, inplace=True)
     self.activate = nn.Sigmoid()
-    self.QAQ = nn.Linear(1+self.Ci*self.L*self.Emb, self.M)
+    self.QAQ = nn.Linear(1+self.L*self.Emb, self.M)
 
   def forward(self, inp):
     note, tempo = inp
-    # note: torch tensor, N x Ci x L
+    # note: torch tensor, N x L
     # tempo: torch tensor, N
     # out: torch tensor variable, N x M
     assert type(note).__name__.endswith('Tensor')
@@ -70,15 +70,15 @@ class MusicEncoder(nn.Module):
     tempo = self.tempo.resize_(tempo.size()).copy_(tempo)
     tempo = Variable(tempo)
 
-    note = self.emb(note.view(-1,self.Ci*self.L)).view(-1, self.Ci, self.L, self.Emb) # N x Ci x L x Emb
-    hid = torch.cat([tempo.view(-1,1), note.view(-1,self.Ci*self.L*self.Emb)], 1)
+    note = self.emb(note.view(-1,self.L)).view(-1, self.L, self.Emb) # N x L x Emb
+    hid = torch.cat([tempo.view(-1,1), note.view(-1,self.L*self.Emb)], 1)
     out = self.QAQ(hid)
     out = self.activate(out)
 
     return out
 
     '''
-    note = self.emb(note.view(-1,self.Ci*self.L)).view(-1, self.Ci, self.L, self.Emb) # N x Ci x L x Emb
+    note = self.emb(note.view(-1,self.Ci*self.L)).view(-1, self.self.L, self.Emb) # N x Ci x L x Emb
     hid = self.conv(note).squeeze(-1)             # N x Co x L-
     hid = self.pool(hid).squeeze(-1)              # N x Co
     self.dropout(hid)
@@ -93,8 +93,8 @@ class MusicEncoder(nn.Module):
     '''
 
 class MusicDecoder(nn.Module):
-  L, Ci, K, Co, M = \
-    config.music.L, config.music.Ci, config.music.K, config.music.Co, config.M
+  L, K, Co, M = \
+    config.music.L, config.music.K, config.music.Co, config.M
   Emb, Siz = config.note.dim, config.note.size
   dp = config.music.dp
   assert L >= K, 'MusicDecoder: Seq length should >= kernel size'
@@ -103,16 +103,16 @@ class MusicDecoder(nn.Module):
     super().__init__()
     self.linear = nn.Linear(self.M, 1+self.Co)
     self.unpool = nn.Linear(1, self.L+self.K-1)
-    self.unconv = nn.Conv1d(self.Co, self.Ci*self.Emb, self.K)
+    self.unconv = nn.Conv1d(self.Co, self.Emb, self.K)
     self.unemb = nn.Linear(self.Emb, self.Siz)
     self.dropout = nn.Dropout(self.dp, inplace=True)
     self.activate = nn.ReLU()
     self.soft = nn.Softmax()
-    self.QAQ = nn.Linear(self.M, 1+self.Ci*self.L*self.Siz)
+    self.QAQ = nn.Linear(self.M, 1+self.L*self.Siz)
 
   def forward(self, inp):
     # inp: torch tensor variable, N x M
-    # note: torch tensor variable, N x Ci x L x E
+    # note: torch tensor variable, N x L x E
     # tempo: torch tensor variable, N
     assert type(inp).__name__ == 'Variable'
 
@@ -123,11 +123,11 @@ class MusicDecoder(nn.Module):
     hid = hid.view(-1, self.Co, self.L+self.K-1)  # N x Co x L+K-1
     hid = self.activate(hid)
 
-    note = self.unconv(hid)                           # N x Ci*E x L
+    note = self.unconv(hid)                           # N x Emb x L
     self.dropout(note)
-    note = note.view(-1, self.Ci, self.Emb, self.L)   # N x Ci x Emb x L
-    note = note.transpose(2, 3).contiguous()          # N x Ci x L x Emb
-    note = self.unemb(note.view(-1,self.Emb)).view(-1, self.Ci, self.L, self.Siz)
+    # note = note.view(-1, self.Emb, self.L)   # N x Emb x L
+    note = note.transpose(1, 2).contiguous()          # N x L x Emb
+    note = self.unemb(note.view(-1,self.Emb)).view(-1, self.L, self.Siz)
     note = note.view(-1,self.Siz)
     self.dropout(note)
 
@@ -185,9 +185,9 @@ def translateWrap(translator):
   return translate
 
 class Translator(nn.Module):
-  L, Ci, E = config.music.L, config.music.Ci, config.music.E
+  L, E = config.music.L, config.music.E
   @param(
-    note = ['LongTensor', (300, Ci, L)], 
+    note = ['LongTensor', (300, L)], 
     tempo = ['Tensor', (300, )],
   )
   def __init__(self, init = None):
@@ -220,7 +220,7 @@ if __name__ == '__main__':
   vsL, vsM = len(dataset.lex.vocab), 5
   n = 3
   lyr = torch.floor( torch.rand(n, config.lyrics.L) * vsL )
-  note = torch.floor( torch.rand(n, config.music.Ci, config.music.L) * vsM )
+  note = torch.floor( torch.rand(n, config.music.L) * vsM )
   tempo = torch.floor( torch.rand(n) * vsM )
   mus = (note, tempo)
 

@@ -45,6 +45,7 @@ class music(metaclass=Args):
   L = 10
   E = len(feat2id)
   K = 3
+  Co = 500
   dp = 0.25
   T = 32
 

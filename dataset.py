@@ -38,7 +38,7 @@ def vec2midi(vec):
   return midi
 
 class Dataset:
-  def __init__(self, inp, tar, batch_size, pad_value=0):
+  def __init__(self, inp, tar, batch_size):
     '''
     inp, tar: dict of (lyrics, note, tempo)
       lyrics: list, lyrics vector
@@ -50,39 +50,17 @@ class Dataset:
     self.tar = tar
 
     for data in [self.inp, self.tar]:
-      if 'lyrics' in data:
-        lyrics = self.padLyrics(data, pad_value)
-        data['lyrics'] = lyrics
-        self.size = len(data['lyrics'])
-      if 'note' in data:
-        note = self.padNote(data)
-        data['note'] = note
-        self.size = len(data['note'])
+      for name, c_type in [('lyrics', config.lyrics), ('note', config.music)]:
+        if name in data:
+          data[name] = self.pad(data[name], c_type)
+          self.size = len(data[name])
 
-  def padNote(self, data):
-    def padNote(note):
-      Ci, E, L = config.music.Ci, config.music.E, config.music.L
-      if len(note) > Ci: note = note[:Ci]
-      for track in note:
-        if len(track) < L:
-          yield track + [ 0 for _ in range(L-len(track)) ]
-        else:
-          yield track[:L]
+  def pad(self, data, config_obj):
+    L = config_obj.L
+    def pad(data):
+      return data[:L] + [ 0 for _ in range(L-len(data)) ]
 
-      for _ in range(len(note), Ci):
-        yield [0 for _ in range(L) ]
-
-    return [ list(padNote(note)) for note in data['note'] ]
-
-  def padLyrics(self, data, pv):
-    def padLyrics(lyr):
-      L = config.lyrics.L
-      if len(lyr) < L:
-        return lyr + [pv]*( L-len(lyr) )
-      else:
-        return lyr[:L]
-
-    return [ padLyrics(lyrics) for lyrics in data['lyrics'] ]
+    return [ pad(d) for d in data ]
 
   def __getitem__(self, i):
     if i >= len(self):
