@@ -4,7 +4,6 @@
 
 ## Files
 ```
-- crawler/
 - data/
     - raw/
         - *.mid
@@ -19,6 +18,8 @@
 - output/
     - {model name}.jsonl
     - {model name}-{id}.mid
+ 
+- crawler/
 - gui/
     - index.html
     - ...
@@ -26,23 +27,51 @@
 
 ## Requirement
 
-- python3.5: packages listed in requirement.txt
-    ```bash
-    pip install -r requirement.txt
-    ```
-    
-    - pytorch should be installed manually from the [website](http://pytorch.org/)
+### Python3.5
 
-    - [jseg3](https://github.com/amigcamel/Jseg/tree/jseg3) should be installed by 
+Packages are listed in `requirement.txt`, so:
+```bash
+pip install -r requirement.txt
+```
+
+- PyTorch should be installed manually from the [website](http://pytorch.org/).
+
+- [Jseg3](https://github.com/amigcamel/Jseg/tree/jseg3) should be installed by 
+
     ```bash
     pip install https://github.com/amigcamel/Jseg/archive/jseg3.zip
     ```
 
-- [midicsv](http://www.fourmilab.ch/webtools/midicsv/)
-    ```bash
-    wget http://www.fourmilab.ch/webtools/midicsv/midicsv-1.1.tar.gz
-    tar zxvf midicsv-1.1.tar.gz
-    cd midicsv-1.1
-    make
-    make install INSTALL_DEST=path_to_install
-    ```
+### [midicsv](http://www.fourmilab.ch/webtools/midicsv/)
+
+```bash
+wget http://www.fourmilab.ch/webtools/midicsv/midicsv-1.1.tar.gz
+tar zxvf midicsv-1.1.tar.gz
+cd midicsv-1.1
+make
+make install INSTALL_DEST=path_to_install
+```
+
+## Usage
+
+### Prepare Data
+
+```bash
+make
+```
+    
+### Train Model
+
+```bash
+python3 train.py
+```
+
+The trained parameters will be saved in `model/test.para`.
+
+### Test Model
+
+```bash
+python3 test.py
+```
+
+The output midi files and input descriptions will be stored in the `output/` directory.
