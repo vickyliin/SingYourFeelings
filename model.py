@@ -109,12 +109,14 @@ class MusicDecoder(nn.Module):
     self.unemb = nn.Linear(self.Emb, self.Siz)
     self.dropout = nn.Dropout(self.dp, inplace=True)
     self.activate = nn.ReLU()
+    '''
     self.soft = nn.Softmax()
     self.QAQ = nn.Linear(self.M, 1+self.L*self.Siz)
+    '''
 
   def forward(self, inp):
     # inp: torch tensor variable, N x M
-    # note: torch tensor variable, N x L x E
+    # note: torch tensor variable, N*L x Siz
     # tempo: torch tensor variable, N
     assert type(inp).__name__ == 'Variable'
 
@@ -125,12 +127,10 @@ class MusicDecoder(nn.Module):
     hid = hid.view(-1, self.Co, self.L+self.K-1)  # N x Co x L+K-1
     hid = self.activate(hid)
 
-    note = self.unconv(hid)                           # N x Emb x L
+    note = self.unconv(hid)                       # N x Emb x L
     self.dropout(note)
-    # note = note.view(-1, self.Emb, self.L)          # N x Emb x L
-    note = note.transpose(1, 2).contiguous()          # N x L x Emb
-    note = self.unemb(note.view(-1,self.Emb)).view(-1, self.L, self.Siz)
-    note = note.view(-1,self.Siz)
+    note = note.transpose(1, 2).contiguous()      # N x L x Emb
+    note = self.unemb(note.view(-1,self.Emb))     # N*L x Siz
     self.dropout(note)
 
     # tempo = self.activate(tempo)
