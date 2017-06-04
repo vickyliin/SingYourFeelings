@@ -39,11 +39,11 @@ def load(filename):
   return sd
 
 class MusicEncoder(nn.Module):
-  L, K, Co, M = \
-    config.music.L, config.music.K, config.music.Co, config.M
+  # K, Co = config.music.K, config.music.Co
+  L, M = config.music.L, config.M
   Emb, Siz = config.note.dim, config.note.size
   dp = config.music.dp
-  assert L >= K, 'MusicEncoder: Seq length should >= kernel size'
+  # assert L >= K, 'MusicEncoder: Seq length should >= kernel size'
   @param(
     note = ['LongTensor', (300, L)], 
     tempo = ['Tensor', (300,)],
@@ -51,10 +51,12 @@ class MusicEncoder(nn.Module):
   def __init__(self):
     super().__init__()
     self.emb = nn.Embedding(self.Siz, self.Emb)
+    '''
     self.conv = nn.Conv2d(1, self.Co, (self.K, self.Emb))
     self.pool = nn.MaxPool1d(self.L, ceil_mode=True)
     self.linear = nn.Linear(1+self.Co, self.M)
     self.dropout = nn.Dropout(self.dp, inplace=True)
+    '''
     self.activate = nn.Sigmoid()
     self.QAQ = nn.Linear(1+self.L*self.Emb, self.M)
 
@@ -70,8 +72,8 @@ class MusicEncoder(nn.Module):
     tempo = self.tempo.resize_(tempo.size()).copy_(tempo)
     tempo = Variable(tempo)
 
-    note = self.emb(note.view(-1,self.L)).view(-1, self.L, self.Emb) # N x L x Emb
-    hid = torch.cat([tempo.view(-1,1), note.view(-1,self.L*self.Emb)], 1)
+    note = self.emb(note).view(-1, self.L*self.Emb)
+    hid = torch.cat([tempo.view(-1,1), note], 1)
     out = self.QAQ(hid)
     out = self.activate(out)
 
@@ -125,7 +127,7 @@ class MusicDecoder(nn.Module):
 
     note = self.unconv(hid)                           # N x Emb x L
     self.dropout(note)
-    # note = note.view(-1, self.Emb, self.L)   # N x Emb x L
+    # note = note.view(-1, self.Emb, self.L)          # N x Emb x L
     note = note.transpose(1, 2).contiguous()          # N x L x Emb
     note = self.unemb(note.view(-1,self.Emb)).view(-1, self.L, self.Siz)
     note = note.view(-1,self.Siz)
@@ -217,8 +219,9 @@ class Translator(nn.Module):
     return Variable(self.note).view(-1), Variable(self.tempo)
 
 if __name__ == '__main__':
-  vsL, vsM = len(dataset.lex.vocab), 5
+  vsL, vsM = len(dataset.lex.vocab), config.note.size
   n = 3
+  M = config.M
   lyr = torch.floor( torch.rand(n, config.lyrics.L) * vsL )
   note = torch.floor( torch.rand(n, config.music.L) * vsM )
   tempo = torch.floor( torch.rand(n) * vsM )
@@ -239,23 +242,21 @@ if __name__ == '__main__':
   md = MusicDecoder()
   print(md)
   outMd = md(outMe)
-  assert outMd[0].size(0) == note.size(0)*note.size(1)*note.size(2)
-  assert outMd[0].size(1) == config.note.size
-  print(outMd[1].size())
-  print(tempo.size)
+  assert outMd[0].size(0) == n * config.music.L
+  assert outMd[0].size(1) == vsM
   assert outMd[1].size() == tempo.size()
 
   ae = Translator([me, md])
   print('Autoencoder: ', ae)
   outAe = ae(mus)
-  assert outAe[0].size(0) == note.size(0)*note.size(1)*note.size(2)
-  assert outAe[0].size(1) == config.note.size
+  assert outAe[0].size(0) == n * config.music.L
+  assert outAe[0].size(1) == vsM
   assert outAe[1].size() == tempo.size()
 
   tr = Translator([le, md])
   print('Translator: ', tr)
   outTr = tr(lyr)
-  assert outTr[0].size(0) == note.size(0)*note.size(1)*note.size(2)
-  assert outTr[0].size(1) == config.note.size
+  assert outTr[0].size(0) == n * config.music.L
+  assert outTr[0].size(1) == vsM
   assert outTr[1].size() == tempo.size()
 
