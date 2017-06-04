@@ -5,8 +5,6 @@
 ## Files
 ```
 - crawler/
-    - midi.py
-    - midi_downloader.py
 - data/
     - raw/
         - *.mid
@@ -21,17 +19,9 @@
 - output/
     - {model name}.jsonl
     - {model name}-{id}.mid
-- platform/
 - gui/
     - index.html
     - ...
-
-- dataset.py
-- model.py
-- test.py
-- train.py
-- Makefile
-- requirement.txt
 ```
 
 ## Requirement
@@ -40,9 +30,10 @@
     ```bash
     pip install -r requirement.txt
     ```
-    > pytorch should be installed manually from the [website](http://pytorch.org/)
+    
+    - pytorch should be installed manually from the [website](http://pytorch.org/)
 
-    [jseg3](https://github.com/amigcamel/Jseg/tree/jseg3) should be installed by 
+    - [jseg3](https://github.com/amigcamel/Jseg/tree/jseg3) should be installed by 
     ```bash
     pip install https://github.com/amigcamel/Jseg/archive/jseg3.zip
     ```
