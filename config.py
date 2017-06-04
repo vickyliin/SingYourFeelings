@@ -27,7 +27,7 @@ class translator(metaclass=Args):
   )
   batch_size = 30
   max_epoch = 10000
-  endure = 30
+  endure = 1000
   loss_cate = 'CrossEntropyLoss'
   loss_val = 'MSELoss'
 
@@ -46,7 +46,7 @@ class music(metaclass=Args):
   E = len(feat2id)
   K = 3
   Co = 500
-  dp = 0.25
+  dp = 0.5
   T = 32
 
 class note(metaclass=Args):
@@ -84,11 +84,11 @@ class lyrics(metaclass=Args):
     dp: dropout rate
     lex: word2vec file
   '''
-  L = 5 #500
+  L = 10 #500
   E = 200
   K = 1
-  Co = 250
-  dp = 0.8
+  Co = 200
+  dp = 0.05
   lex = 'data/word-vectors.txt'
 
 # encoded vector size
