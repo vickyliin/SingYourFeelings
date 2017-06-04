@@ -1,28 +1,19 @@
 #!/usr/bin/env python
-import torch
 from copy import deepcopy
+
+import torch
 
 import config
 import model
 import dataset
-import numpy as np
 
 def batchLoss(model, dataset, criterion, train=True):
-  '''
-  def cpu(ten): return ten.data.cpu().numpy()
-  def cuda(ten): return ten.cuda()
-  '''
   epoch_loss = [0, 0]
   loss = [0, 0]
   for batch in dataset:
     inp, tar = batch
     tar = model.wrapTar(tar)
     out = model(inp)
-    '''
-    cuda(out[0])
-    cuda(tar[0])
-    '''
-    
 
     loss[0] = criterion[0](out[0], tar[0])
     loss[1] = criterion[1](out[1], tar[1])
@@ -32,28 +23,19 @@ def batchLoss(model, dataset, criterion, train=True):
     epoch_loss[0] += loss[0].data[0]
     epoch_loss[1] += loss[1].data[0]
 
-  '''
-  acc = np.sum(np.argmax(cpu(out[0]), 1)==cpu(tar[0]))
-  acc = acc/len(cpu(tar[0]))
-  '''
   _, out_idx = out[0].max(1)
   acc = (out_idx == tar[0]).sum()
   acc = acc.data[0]
   acc /= tar[0].size(0)
-  '''
-  cuda(out[0])
-  cuda(tar[0])
-  '''
-
 
   loss = [ (loss/len(dataset)) for loss in epoch_loss ]
   loss[1] = loss[1]**0.5
 
-
   _loss = (loss[0]*loss[1])**.5
 
-  print('%s: ' % ['Validate', 'Train'][train], end='')
-  print('({:.4f}, {:.4f}) : {:.4f}, acc: {:.4f} - '.format(loss[0], loss[1], _loss, acc), end='')
+  print('%-9s- ' % ['Validate', 'Train'][train], end='')
+  print('loss: ({:.4f}, {:.4f}) {:.4f}, acc: {:.4f}'.format(
+      loss[0], loss[1], _loss, acc))
   yield _loss, True
 
 def validate(model, valset, criterion):
@@ -80,7 +62,6 @@ def earlyStop(fin):
           print('\nmin Validate Loss: {:.4f}'.format(min_loss))
           break
 
-    
   return train
 
 
@@ -101,10 +82,6 @@ def train(model, trainset, valset, args):
       loss[1].backward()
       optim.step()
       optim.zero_grad()
-      '''
-      print('Loss: {:.4f}, {:.4f}'.format(
-          loss[0].data[0], loss[1].data[0]), end='\r')
-      '''
 
     model.train(False)
     valloss = validate(model, valset, criterion)
@@ -127,8 +104,6 @@ if __name__ == '__main__':
   print(args)
   print(ae)
   train(ae, AEtrainset, AEvalset, args = args)
-  input()
-
 
   args = config.translator
   print(args)

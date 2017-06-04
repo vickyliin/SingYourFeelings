@@ -42,7 +42,7 @@ class music(metaclass=Args):
  
   id2feat = 'pitch time duration volume'.split()
   feat2id = {feat: id for id, feat in enumerate(id2feat)}
-  L = 10
+  L = 30
   E = len(feat2id)
   K = 3
   Co = 500
@@ -67,7 +67,6 @@ class note(metaclass=Args):
   note2id[0,0,0,0] = 0
   id2note = {v: k for k, v in note2id.items()}
   size = len(note2id)
-  print(size)
 
   dim = 30
 
@@ -92,6 +91,6 @@ class lyrics(metaclass=Args):
   lex = 'data/word-vectors.txt'
 
 # encoded vector size
-M = 200 #100
+M = 200
 
 
