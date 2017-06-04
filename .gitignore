@@ -1,4 +1,4 @@
-test.mid
+test*.mid
 .env
 data
 .*.swp

@@ -49,7 +49,7 @@ class Dataset:
     self.inp = inp
     self.tar = tar
 
-    for data in [self.inp, self.tar]:
+    for data in filter(None, [self.inp, self.tar]):
       for name, c_type in [('lyrics', config.lyrics), ('note', config.music)]:
         if name in data:
           data[name] = self.pad(data[name], c_type)

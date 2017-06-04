@@ -178,12 +178,16 @@ class LyricsEncoder(nn.Module):
     return out
 
 def translateWrap(translator):
+  import lyrics2vec as l2v
   def translate(s):
-    inp = dataset.lyr2vec(s)
-    dec = translator(inp)
-    out = dataset.vec2midi(dec)
+    inp = l2v.convert(s)[:config.lyrics.L]
+    inp = torch.Tensor(inp).unsqueeze(0)
+    note, tempo = translator(inp)
+    
+    _, note = note.max(1)
+    vec = note.data.squeeze().tolist(), tempo.data[0]
+    out = dataset.vec2midi(vec)
     return out
-
   return translate
 
 class Translator(nn.Module):
@@ -209,8 +213,8 @@ class Translator(nn.Module):
 
   def forward(self, inp):
     enc = self.encoder(inp)
-    dec = self.decoder(enc)
-    return dec
+    out = self.decoder(enc)
+    return out 
 
   def wrapTar(self, tar):
     note, tempo = tar
