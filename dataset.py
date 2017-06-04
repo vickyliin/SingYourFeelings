@@ -18,24 +18,23 @@ vs = len(lex.vocab)
 def vec2midi(vec):
   '''
   vec: (note, tempo)
-    note: list, Ci x L
+    note: list note sequence L
     tempo: float
   '''
   notes, tempo = vec
 
-  midi = MIDIFile(config.music.Ci)
-  tempo *= config.tempo.default # mus/beat
-  tempo = int(1/tempo * 1e6 * 60)    # beat/minute (BPM)
+  midi = MIDIFile(1)
+  tempo *= config.tempo.default    # mus/beat
+  tempo = int(1e6 * 60 / tempo)    # beat/minute (BPM)
   midi.addTempo(0, 0, tempo)
 
   feat2id = config.music.feat2id.items()
-  for track, track_notes in enumerate(notes):
-    time = 0
-    for note_emb in track_notes:
-      note = config.note.id2note[note_emb]
-      note = {feat: note[id] for feat, id in feat2id}
-      note['time'] = time = note['time'] + time
-      midi.addNote(track=track, channel=0, **note)
+  time = 0
+  for note_emb in notes:
+    note = config.note.id2note[note_emb]
+    note = {feat: note[id] for feat, id in feat2id}
+    note['time'] = time = note['time'] + time
+    midi.addNote(track=0, channel=0, **note)
   return midi
 
 class Dataset:
@@ -199,13 +198,12 @@ def save(args):
   for f, paths in [(args.train, train), (args.valid, valid)]:
     for fid, name, lyr_path, midi_path in paths:
       lyrics = l2v.convert(lyr_path, is_file=True)
-      for j, (note, tempo) in enumerate(m2v.convert(midi_path)):
+      for j, snippet in enumerate(m2v.convert(midi_path)):
         id = '%d-%d' % (fid, j)
         data = dict(id=id,
                     name=name, 
                     lyrics=lyrics, 
-                    note=note, 
-                    tempo=tempo)
+                    **snippet)
         print(json.dumps(data, ensure_ascii=False, sort_keys=True), file=f)
       i += 1
       print('{:>5d}/{:>5d}'.format(i, n), end='\r')
@@ -223,5 +221,5 @@ if __name__ == '__main__':
   start = time.time()
   args = ap.parse_args()
   save(args)
-  print('\nTime:', time.time()-start, 's')
+  print('\nElapsed: ', int(time.time()-start), 's', sep='')
 

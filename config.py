@@ -35,22 +35,18 @@ class music(metaclass=Args):
   '''
     T: time period of a music sneppet (in beat)
     L: max music length 
-    Ci: music track number
     E: note feature number
     K: kernel size
-    Co: output channel
     dp: dropout rate
   '''
  
-  feat2id = {'pitch':0, 'time':1, 'duration':2, 'volume':3}
-  id2feat = { v: k for k, v in feat2id.items() }
-  L = 10 #300
-  Ci = 100 #5
+  id2feat = 'pitch time duration volume'.split()
+  feat2id = {feat: id for id, feat in enumerate(id2feat)}
+  L = 10
   E = len(feat2id)
-  K = 3 #10
-  Co = 1000
+  K = 3
   dp = 0.25
-  T = 30
+  T = 32
 
 class note(metaclass=Args):
   '''
@@ -58,16 +54,19 @@ class note(metaclass=Args):
   size: number of embeddings
   '''
   from itertools import product
-  pitch = list(range(25,100))
-  duration = [1/4, 1/3, 1/2, 1, 1.5, 2, 3, 4]
-  time = [0] + duration + [6, 8, 10, 12, 16]
-  volume = [85, 150]
+  pitch = list(range(36,90))
+  duration = [x/2 for x in range(1, 4)]
+  time = [x/16 for x in range(8)]
+  time += [x/8 for x in range(4, 8)]
+  time += [x/2 for x in range(2, 4)]
+  volume = [80, 100]
 
   divs = [pitch, time, duration, volume]
   note2id = {k: i for i, k in enumerate(product(*divs), 1)}
   note2id[0,0,0,0] = 0
   id2note = {v: k for k, v in note2id.items()}
   size = len(note2id)
+  print(size)
 
   dim = 30
 
