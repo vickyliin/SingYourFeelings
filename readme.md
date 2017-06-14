@@ -1,6 +1,6 @@
 # 把你心情哼成歌
 
-「[把你心情哼成歌](https://vickyliin.github.io/SingYourFeelings/gui/)」（Sing Your Feelings, SYF）是一個結合文字辨識和音樂生成的系統，把一段有意義的句子、詩詞或文章轉換成一段好聽的音樂，並能體現出這段文字的意涵。
+「[把你心情哼成歌](http://singyourfeelings.ml/)」（Sing Your Feelings, SYF）是一個結合文字辨識和音樂生成的系統，把一段有意義的句子、詩詞或文章轉換成一段好聽的音樂，並能體現出這段文字的意涵。
 
 ## Files
 ```
@@ -15,12 +15,8 @@
     - word-vectors.txt
 - model/
     - {model name}.para
-- output/
-    - {model name}.jsonl
-    - {model name}-{id}.mid
  
 - crawler/
-- demo/
 - gui/
     - index.html
     - ...
@@ -30,11 +26,6 @@
 
 ### Python3.5
 
-Packages are listed in `requirement.txt`, so:
-```bash
-pip install -r requirement.txt
-```
-
 - PyTorch should be installed manually from the [website](http://pytorch.org/).
 
 - [Jseg3](https://github.com/amigcamel/Jseg/tree/jseg3) should be installed by 
@@ -42,6 +33,12 @@ pip install -r requirement.txt
     ```bash
     pip install https://github.com/amigcamel/Jseg/archive/jseg3.zip
     ```
+
+Other packages are listed in `requirement.txt`, so:
+
+```bash
+pip install -r requirement.txt
+```
 
 ### [midicsv](http://www.fourmilab.ch/webtools/midicsv/)
 
@@ -61,8 +58,12 @@ make install INSTALL_DEST=path_to_install
 make
 ```
 
-The dataset will be saved in `data/train.jsonl` and `data/valid.jsonl`.
-    
+This will generate in the `data/` folder: 
+
+- the word vectors `word-vectors.txt`
+
+- the dataset `train.jsonl` and `valid.jsonl`
+
 ### Train Model
 
 ```bash
@@ -71,18 +72,40 @@ python3 train.py
 
 The trained parameters will be saved in `model/test.para`.
 
-### Test Model
+### Server
 
-```bash
-python3 test.py
-```
+Two different servers should be launched for different perposes:
 
-The output midi files and input descriptions will be stored in the `output/` directory.
+- HTTP server, this shoud be started in the `gui/` folder:
+
+    ```bash
+    python3 -m http.server --bind 0.0.0.0 80 
+    ```
+
+- The websocket server generates midi files from text:
+        
+    ```bash
+    python3 server.py
+    ``` 
+
+- **Set the connect ip and port of your websocket client to its ip/port** in `gui/main.js`
+
+    ```javascript
+    var host = YOUR_WEBSOCKET_IP,   // set `localhost` for test
+        port = YOUR_WEBSOCKET_PORT;
+    ```
 
 ## Modification
 
+### Train
+
 The arguments are stored in `config.py`. One can find detailed descriptions about the arguments in it.
 
-Other usage of the system can be found in the `demo/` directory.
+### Websocket Server
 
+- You can choose your own model and the automatically cleaning period.
 
+    ```python
+    para = 'model/test.para' # path to your trained model
+    checkmin = 5 # automatically delete generated files older than this (in minute)
+    ```
