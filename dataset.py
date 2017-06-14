@@ -23,7 +23,7 @@ def vec2midi(vec):
   '''
   notes, tempo = vec
 
-  midi = MIDIFile(1)
+  midi = MIDIFile(1, adjust_origin=False)
   tempo *= config.tempo.default    # mus/beat
   tempo = int(1e6 * 60 / tempo)    # beat/minute (BPM)
   midi.addTempo(0, 0, tempo)
