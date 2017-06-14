@@ -74,7 +74,7 @@ The trained parameters will be saved in `model/test.para`.
 
 ### Server
 
-Two different servers should be launched for different perposes:
+Two different servers should be launched for different purposes:
 
 - HTTP server, this shoud be started in the `gui/` folder:
 
