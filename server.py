@@ -16,8 +16,9 @@ logging.getLogger('jseg.jieba').setLevel(logging.ERROR)
 model.use_cuda = False
 outpath = 'gui/midifiles'
 para = 'model/test.para'
+checkmin = 5
 
-cmd = 'watch -n 300 find {}/ -mmin +5 -delete'.format(outpath)
+cmd = 'watch -n {} find {}/ -mmin +{} -delete'.format(checkmin*60, outpath, checkmin)
 cleaner = Popen(cmd.split(), stdout=DEVNULL, stderr=DEVNULL)
 async def midigen(websocket, path):
     while True:

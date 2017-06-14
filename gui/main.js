@@ -1,7 +1,7 @@
 var host = "54.254.210.178",
-    port = "5678",
-    ws = null;
+    port = "5678";
 
+var ws = null;
 onmessage = function(event){
   MIDIjs.play("/midifiles/" + event.data);
 };
