@@ -30,15 +30,6 @@ class param:
 
     return __init__
 
-def load_config(filename):
-  import imp
-  global config
-  global lex
-  global vs
-  config = imp.load_source('config', filename)
-  lex = w2v.load(config.lyrics.lex)
-  vs = len(lex.vocab)
-
 def load(filename):
   if use_cuda:
     sd = torch.load(filename)
@@ -47,7 +38,6 @@ def load(filename):
       map_location = lambda storage, loc: storage)
 
   return sd
-
 
 class MusicEncoder(nn.Module):
   @param(
