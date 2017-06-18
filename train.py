@@ -30,17 +30,15 @@ def record(batchLoss):
     loss = [ (loss/len(dataset)) for loss in epoch_loss ]
     loss[1] = loss[1]**0.5
 
-    _loss = (loss[0]*loss[1])**.5
-
     state = ['Validate', 'Train'][train]
     print('%-9s- ' % state, end='')
-    print('loss: ({:7.4f}, {:7.4f}) {:7.4f}, acc: {:.4f}'.format(
-        loss[0], loss[1], _loss, acc))
+    print('loss: ({:7.4f}, {:7.4f}) , acc: {:.4f}'.format(
+        loss[0], loss[1], acc))
 
     history['Loss of Note', state].append(loss[0])
     history['Loss of Tempo', state].append(loss[1])
     history['Accuracy', state].append(acc)
-    yield _loss, True
+    yield -acc, True
   return decorated
 
 @record
@@ -78,7 +76,7 @@ def earlyStop(fin):
         endure += 1
         if endure > args.endure:
           model.load_state_dict(sd)
-          print('\nmin Validate Loss: {:.4f}'.format(min_loss))
+          print('\n Max Validate Acc: {:.4f}'.format(-min_loss))
           break
     return history
 

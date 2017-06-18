@@ -177,7 +177,7 @@ class LyricsEncoder(nn.Module):
 
     out = self.linear(hid)                        # N x M
     self.dropout(out)
-    #out = self.activate(out)
+    out = self.activate(out)
 
     return out
 
