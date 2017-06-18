@@ -93,4 +93,4 @@ class lyrics(metaclass=Args):
 # encoded vector size
 M = 200
 
-
+print(note.size)
