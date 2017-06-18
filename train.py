@@ -34,7 +34,7 @@ def record(batchLoss):
 
     state = ['Validate', 'Train'][train]
     print('%-9s- ' % state, end='')
-    print('loss: ({:.4f}, {:.4f}) {:.4f}, acc: {:.4f}'.format(
+    print('loss: ({:7.4f}, {:7.4f}) {:7.4f}, acc: {:.4f}'.format(
         loss[0], loss[1], _loss, acc))
 
     history['Loss of Note', state].append(loss[0])
@@ -98,8 +98,8 @@ def train(model, trainset, valset, args):
     for loss, end in batchLoss(model, trainset, criterion):
       if end:
         break
-      loss[0].backward(retain_variables=True)
-      loss[1].backward()
+      loss[1].backward(retain_variables=True)
+      loss[0].backward()
       optim.step()
       optim.zero_grad()
 
@@ -136,6 +136,7 @@ if __name__ == '__main__':
     yaml.dump(hist, f)
 
   filename = 'model/%s.para'%args.name
+  print('Saved as %s' % filename)
   torch.save(tr.state_dict(), filename)
   
   sd = model.load(filename)

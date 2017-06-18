@@ -11,11 +11,11 @@ class Args(type):
 class autoencoder(metaclass=Args):
   optim = 'Adam'
   optim_args = dict(
-    lr = 3e-3
+    lr = 1e-3
   )
-  batch_size = 30
-  max_epoch = 10000
-  endure = 20
+  batch_size = 256
+  max_epoch = 300
+  endure = 10000
   loss_cate = 'CrossEntropyLoss'
   loss_val = 'MSELoss'
 
@@ -23,11 +23,11 @@ class translator(metaclass=Args):
   name = 'test'
   optim = 'RMSprop'
   optim_args = dict(
-    lr = 3e-3
+    lr = 1e-3
   )
-  batch_size = 30
-  max_epoch = 10000
-  endure = 1000
+  batch_size = 256
+  max_epoch = 300
+  endure = 10000
   loss_cate = 'CrossEntropyLoss'
   loss_val = 'MSELoss'
 
@@ -42,9 +42,9 @@ class music(metaclass=Args):
  
   id2feat = 'pitch time duration volume'.split()
   feat2id = {feat: id for id, feat in enumerate(id2feat)}
-  L = 30
+  L = 32
   E = len(feat2id)
-  K = 3
+  K = 5
   Co = 500
   dp = 0.5
   T = 32
@@ -84,10 +84,10 @@ class lyrics(metaclass=Args):
     lex: word2vec file
   '''
   L = 10 #500
-  E = 200
+  E = 100
   K = 1
-  Co = 200
-  dp = 0.05
+  Co = 500
+  dp = 0.001
   lex = 'data/word-vectors.txt'
 
 # encoded vector size

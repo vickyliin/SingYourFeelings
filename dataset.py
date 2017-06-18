@@ -179,9 +179,13 @@ def save(args):
       lyrics = l2v.convert(lyr_path, is_file=True)
       for j, snippet in enumerate(m2v.convert(midi_path)):
         id = '%d-%d' % (fid, j)
+        start = j*config.lyrics.L
+        end = start + config.lyrics.L
+        if start >= len(lyrics):
+          break
         data = dict(id=id,
                     name=name, 
-                    lyrics=lyrics, 
+                    lyrics=lyrics[start:end], 
                     **snippet)
         print(json.dumps(data, ensure_ascii=False, sort_keys=True), file=f)
       i += 1
