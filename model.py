@@ -144,7 +144,7 @@ class MusicDecoder(nn.Module):
 
 class LyricsEncoder(nn.Module):
   @param(inp = ['LongTensor', (300, config.lyrics.L)])
-  def __init__(self, vs, init_embed=True):
+  def __init__(self, vs):
     # vs: vocabulary size
     super().__init__()
     self.L, self.E, self.K, self.Co, self.M = config.lyrics.L, config.lyrics.E, config.lyrics.K, config.lyrics.Co, config.M
@@ -157,8 +157,6 @@ class LyricsEncoder(nn.Module):
     self.pool = nn.MaxPool1d(self.L, ceil_mode=True)
     self.linear = nn.Linear(self.Co, self.M)
     self.activate = nn.Sigmoid()
-    if init_embed:
-      self.embed.weight.data.copy_(torch.from_numpy(lex.vectors))
 
 
   def forward(self, inp):
@@ -210,7 +208,7 @@ class Translator(nn.Module):
       self.encoder = encoder
       self.decoder = decoder
     else:
-      self.encoder = LyricsEncoder(vs, init_embed=False)
+      self.encoder = LyricsEncoder(vs)
       self.decoder = MusicDecoder()
       self.translate = translateWrap(self)
       self.train(False)
