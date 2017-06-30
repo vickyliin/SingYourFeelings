@@ -7,11 +7,11 @@ from flask import Flask, request, send_file
 
 import model
 
-model.use_cuda = False
-static = 'gui'
-port = 39213
 para = 'model/test.para'
+model.use_cuda = False
+port = 80
 
+static = 'gui'
 app = Flask('syf-server', static_url_path='', static_folder=static)
 
 def midigen(text):

@@ -14,3 +14,4 @@ six==1.10.0
 torch==0.1.12.post2
 websockets==3.3
 word2vec==0.9.1
+Flask==0.12.2
