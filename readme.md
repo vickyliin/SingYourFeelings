@@ -74,26 +74,9 @@ The trained parameters will be saved in `model/test.para`.
 
 ### Server
 
-Two different servers should be launched for different purposes:
-
-- HTTP server, this shoud be started in the `gui/` folder:
-
-    ```bash
-    python3 -m http.server --bind 0.0.0.0 80 
-    ```
-
-- The websocket server generates midi files from text:
-        
-    ```bash
-    python3 server.py
-    ``` 
-
-- **Set the connect ip and port of your websocket client to its ip/port** in `gui/main.js`
-
-    ```javascript
-    var host = YOUR_WEBSOCKET_IP,   // set `localhost` for test
-        port = YOUR_WEBSOCKET_PORT;
-    ```
+```
+python3 server.py
+```
 
 ## Modification
 
@@ -101,11 +84,12 @@ Two different servers should be launched for different purposes:
 
 The arguments are stored in `config.py`. One can find detailed descriptions about the arguments in it.
 
-### Websocket Server
+### Server
 
-- You can choose your own model and the automatically cleaning period.
+- You can choose your own model, port and cuda usage in `server.py`.
 
     ```python
     para = 'model/test.para' # path to your trained model
-    checkmin = 5 # automatically delete generated files older than this (in minute)
+    model.use_cuda = False
+    port = 80
     ```
