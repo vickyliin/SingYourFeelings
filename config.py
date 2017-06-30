@@ -26,8 +26,8 @@ class translator(metaclass=Args):
     lr = 3e-3
   )
   batch_size = 30
-  max_epoch = 2000
-  endure = 10000
+  max_epoch = 10000
+  endure = 1000
   loss_cate = 'CrossEntropyLoss'
   loss_val = 'MSELoss'
 
@@ -93,4 +93,4 @@ class lyrics(metaclass=Args):
 # encoded vector size
 M = 200
 
-print(note.size)
+
