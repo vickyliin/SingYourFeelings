@@ -1,44 +1,39 @@
 #!/usr/bin/env python
-import os
-import uuid
-from subprocess import Popen, DEVNULL
+import io
 import logging
+logging.getLogger('jseg.jieba').setLevel(logging.ERROR)
 
-import asyncio
-import websockets
+from flask import Flask, request, send_file
 
 import model
 
-logging.getLogger('websockets.protocol').setLevel(logging.ERROR)
-logging.getLogger('asyncio').setLevel(logging.ERROR)
-logging.getLogger('jseg.jieba').setLevel(logging.ERROR)
-
 model.use_cuda = False
-outpath = 'gui/midifiles'
+static = 'gui'
+port = 39213
 para = 'model/test.para'
-checkmin = 5
 
-cmd = 'watch -n {} find {}/ -mmin +{} -delete'.format(checkmin*60, outpath, checkmin)
-cleaner = Popen(cmd.split(), stdout=DEVNULL, stderr=DEVNULL)
-async def midigen(websocket, path):
-    while True:
-        text = await websocket.recv()
-        print("< {}".format(text))
-        midi = tr.translate(text)
-        filename = '%s/%s.mid' % (outpath, uuid.uuid1())
-        os.makedirs(outpath, exist_ok=True)
-        with open(filename, 'wb') as f:
-            midi.writeFile(f)
+app = Flask('syf-server', static_url_path='', static_folder=static)
 
-        await websocket.send(os.path.basename(filename))
-        print("> {}".format(filename))
+def midigen(text):
+    app.logger.debug("< {}".format(text))
+    midi = tr.translate(text)
 
+    buff = io.BytesIO()
+    midi.writeFile(buff)
+    return buff
+
+def root():
+    if 'text' in request.args:
+        buff = midigen(request.args['text'])
+        buff.seek(0)
+        return send_file(buff, attachment_filename='melody.mid')
+    else:
+        return app.send_static_file('index.html')
 
 tr = model.Translator()
 sd = model.load(para)
 tr.load_state_dict(sd)
 
-start_server = websockets.serve(midigen, '0.0.0.0', 5678, timeout=86400)
-
-asyncio.get_event_loop().run_until_complete(start_server)
-asyncio.get_event_loop().run_forever()
+app.route('/')(root)
+app.route('/index.html')(root)
+app.run(debug=True, port=port, threaded=True)
