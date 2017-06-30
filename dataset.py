@@ -22,6 +22,7 @@ def vec2midi(vec):
     tempo: float
   '''
   notes, tempo = vec
+  print(notes)
 
   midi = MIDIFile(1, adjust_origin=False)
   tempo *= config.tempo.default    # mus/beat

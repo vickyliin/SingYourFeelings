@@ -36,4 +36,4 @@ tr.load_state_dict(sd)
 
 app.route('/')(root)
 app.route('/index.html')(root)
-app.run(debug=True, port=port, threaded=True)
+app.run(debug=True, port=port, threaded=True, host='0.0.0.0')
